@@ -9,13 +9,20 @@
 ## Project structure
 ScholarSetu/
 ├── app/
-│ ├── records.py # load_records, search, count_by, get_by_id
-│ └── cli.py # menu program that uses records.py
+│ ├── cli.py # menu program that uses records.py
+│ ├── fetch.py # downloads source pages into data/raw/
+│ ├── ingest.py # cleans the raw CSV into data/records.json
+│ ├── models.py # Record dataclass
+│ └── records.py # load_records, search, count_by, get_by_id
 ├── data/
-│ └── sample_records.py # scholarship records (list of dicts)
+│ ├── raw/ # downloaded pages (not pushed to GitHub)
+│ ├── records.json # clean records created by ingest.py
+│ ├── sample_records.py # Day 2 sample records
+│ └── scholarships_raw.csv # raw scholarship data
 ├── day01_intro.py
 ├── day01_menu.py
 ├── day02_search.py
+├── day03_models_demo.py
 ├── requirements.txt
 └── README.md
 
@@ -30,10 +37,22 @@ ScholarSetu/
 - `app/records.py` - reusable functions: `load_records()`, `search()`, `count_by()`, `get_by_id()`
 - `app/cli.py` - menu program that uses the functions in `records.py`
 
+## Day 3
+- `data/scholarships_raw.csv` - raw scholarship data collected from MahaDBT and NSP
+- `app/ingest.py` - cleans each row (income formats, levels, missing fields), skips bad rows with a log message, and saves `data/records.json`
+- `app/records.py` - `load_records()` now reads `data/records.json`; `load_record_objects()` returns `Record` objects
+- `app/models.py` - `Record` dataclass for one scholarship
+- `app/fetch.py` - downloads source pages into `data/raw/` with timeouts and error handling
+- `day03_models_demo.py` - converts loaded dicts into `Record` objects
+
 ## How to run
 Run all commands from the project root folder.
 
+    pip install -r requirements.txt
     python day01_intro.py
     python day01_menu.py
     python day02_search.py
+    python -m app.ingest
     python -m app.cli
+    python day03_models_demo.py
+    python -m app.fetch
