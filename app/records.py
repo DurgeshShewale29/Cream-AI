@@ -1,9 +1,25 @@
-from data.sample_records import RECORDS
+import json
+import logging
+from pathlib import Path
+
+from app.models import Record
+
+RECORDS_JSON = Path(__file__).resolve().parent.parent / "data" / "records.json"
 
 
 def load_records():
-    """Return all records as a list of dicts."""
-    return list(RECORDS)
+    """Return all records (list of dicts) from data/records.json."""
+    try:
+        with open(RECORDS_JSON, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        logging.error("records.json not found. Run: python -m app.ingest")
+        return []
+
+
+def load_record_objects():
+    """Return all records as Record objects."""
+    return [Record.from_dict(r) for r in load_records()]
 
 
 def search(records, keyword):

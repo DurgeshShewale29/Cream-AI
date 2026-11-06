@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "AICTE Pragati Scholarship for Girl Students",
+    "level": "Central",
+    "category": "Girls (all categories)",
+    "income_limit": 800000,
+    "benefit": "Rs 50,000 per year",
+    "deadline": "31 Oct 2026 (verify)",
+    "apply_at": "NSP",
+    "source_url": "https://scholarships.gov.in",
+    "verified": false
+  },
+  {
+    "id": 2,
+    "name": "EBC Fee Concession (Rajarshi Shahu Maharaj)",
+    "level": "State",
+    "category": "Open / EWS",
+    "income_limit": 800000,
+    "benefit": "50% tuition and exam fee concession",
+    "deadline": "30 Sep 2026 (verify)",
+    "apply_at": "MahaDBT",
+    "source_url": "https://mahadbt.maharashtra.gov.in/SchemeData/SchemeData",
+    "verified": false
+  },
+  {
+    "id": 3,
+    "name": "Tuition and Exam Fee Freeship (OBC/VJNT/SBC)",
+    "level": "State",
+    "category": "OBC / VJNT / SBC",
+    "income_limit": 800000,
+    "benefit": "Tuition and exam fee waiver",
+    "deadline": "verify on MahaDBT",
+    "apply_at": "MahaDBT",
+    "source_url": "https://mahadbt.maharashtra.gov.in/SchemeData/SchemeData",
+    "verified": false
+  }
+]
