@@ -3,18 +3,21 @@ import logging
 from pathlib import Path
 
 from app.models import Record
+from data.sample_records import RECORDS as SAMPLE_RECORDS
 
 RECORDS_JSON = Path(__file__).resolve().parent.parent / "data" / "records.json"
 
 
 def load_records():
-    """Return all records (list of dicts) from data/records.json."""
+    """Return all records (list of dicts). Uses data/records.json if it exists,
+    otherwise falls back to the hand-collected data/sample_records.py."""
     try:
         with open(RECORDS_JSON, encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
-        logging.error("records.json not found. Run: python -m app.ingest")
-        return []
+        logging.warning("records.json not found, using sample_records.py "
+                        "(run: python -m app.fetch, then python -m app.ingest)")
+        return list(SAMPLE_RECORDS)
 
 
 def load_record_objects():
@@ -27,12 +30,12 @@ def search(records, keyword):
     keyword = keyword.lower().strip()
     return [
         r for r in records
-        if keyword in " ".join(str(v) for v in r.values()).lower()
+        if keyword in " ".join(str(v) for v in r.values() if v is not None).lower()
     ]
 
 
 def count_by(records, field):
-    """Count records per value of a field, e.g. count_by(records, 'level')."""
+    """Count records per value of a field, e.g. count_by(records, 'department')."""
     counts = {}
     for r in records:
         key = r.get(field, "unknown")

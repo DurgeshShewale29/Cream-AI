@@ -2,20 +2,23 @@ from app.records import load_records, search, count_by, get_by_id
 
 
 def show(record):
-    print(f"{record['id']}. {record['name']}")
-    print(f"   Level: {record['level']} | For: {record['category']}")
-    print(f"   Income limit: Rs {record['income_limit']:,} | Benefit: {record['benefit']}")
-    print(f"   Deadline: {record['deadline']} | Apply at: {record['apply_at']}")
+    limit = f"Rs {record['income_limit']:,}" if record["income_limit"] else "not collected"
+    print(f"{record['id']}. {record['scheme_name']}")
+    print(f"   Department: {record['department']}")
+    print(f"   For: {record['eligible_category']} | Income limit: {limit}")
+    print(f"   Benefit: {record['benefit']}")
+    print(f"   Source: {record['source_url']}")
 
 
 def main():
     records = load_records()
+    print(f"Loaded {len(records)} scholarships")
     while True:
         print()
         print("--- ScholarSetu ---")
         print("1. List all scholarships")
         print("2. Search by keyword")
-        print("3. Count by field (level / category / apply_at)")
+        print("3. Count by field (department / eligible_category)")
         print("4. Get scholarship by id")
         print("0. Exit")
         choice = input("Choose an option: ").strip()
