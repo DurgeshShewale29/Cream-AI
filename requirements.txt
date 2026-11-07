@@ -1,2 +1,6 @@
 # ScholarSetu dependencies
 requests
+fastapi
+uvicorn
+pandas
+scikit-learn

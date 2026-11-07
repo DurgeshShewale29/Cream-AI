@@ -9,14 +9,19 @@
 ## Project structure
 ```
 ScholarSetu/
+├── analysis/
+│   └── explore.py           # prints 3 facts about the records (pandas)
 ├── app/
 │   ├── cli.py               # menu program that uses records.py
 │   ├── fetch.py             # downloads source pages into data/raw/
 │   ├── ingest.py            # cleans downloaded pages into data/records.json
+│   ├── main.py              # FastAPI service
 │   ├── models.py            # Record dataclass
-│   └── records.py           # load_records, search, count_by, get_by_id
+│   ├── records.py           # load_records, search, count_by, get_by_id
+│   └── smart_search.py      # TF-IDF + cosine ranking, powers /search
 ├── data/
 │   ├── raw/                 # downloaded pages (not pushed to GitHub)
+│   ├── questions.json       # saved by POST /questions (not pushed to GitHub)
 │   ├── records.json         # clean records created by ingest.py
 │   └── sample_records.py    # 20 hand-collected schemes
 ├── day01_intro.py
@@ -48,6 +53,16 @@ Each scheme is a dict with: `scheme_name`, `department`, `eligible_category`, `i
 - `app/records.py` - `load_records()` now reads `data/records.json` (falls back to `sample_records.py`); `load_record_objects()` returns `Record` objects
 - `day03_models_demo.py` - converts loaded dicts into `Record` objects
 
+## Day 4
+- `app/main.py` - FastAPI service with these endpoints:
+  - `GET /health` - service status and number of schemes loaded
+  - `GET /records?limit=` - list schemes (default 10, max 100)
+  - `GET /records/{id}` - one scheme, 404 if it does not exist
+  - `GET /search?q=` - schemes ranked by relevance, each with a `score`
+  - `POST /questions` - saves a user question to `data/questions.json`
+- `app/smart_search.py` - ranks records with TF-IDF + cosine similarity; powers `/search`
+- `analysis/explore.py` - prints 3 facts about the records using pandas: data completeness, departments with the most schemes, and the collected income limits
+
 ## How to run
 Run all commands from the project root folder.
 
@@ -63,6 +78,13 @@ Run all commands from the project root folder.
     python -m app.ingest
     python -m app.cli
     python day03_models_demo.py
+
+    python analysis/explore.py
+
+### Run the API
+    uvicorn app.main:app --reload
+
+Then open http://127.0.0.1:8000/docs to try every endpoint.
 
 ## Notes
 - The DTE site sometimes returns a 503 error. `fetch.py` retries and skips files it already has; use `python -m app.fetch --force` to download everything again.
