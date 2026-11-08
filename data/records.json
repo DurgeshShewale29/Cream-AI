@@ -1,432 +1,72 @@
 [
   {
     "id": 1,
-    "scheme_name": "Prime Minister's Scholarship Scheme For Wards Of States/UTs Police Personnel Martyred During Terror/Naxal Attacks",
-    "department": "Ministry of Home Affairs",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 2,
-    "scheme_name": "Prime Minister's Scholarship Scheme For Central Armed Police Forces And Assam Rifles",
-    "department": "Ministry of Home Affairs",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 3,
-    "scheme_name": "AICTE - Swanath Scholarship Scheme (Technical Degree)",
-    "department": "All India Council For Technical Education",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 4,
-    "scheme_name": "PM USP Special Scholarship Scheme For Jammu Kashmir And Ladakh",
-    "department": "All India Council For Technical Education",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 5,
-    "scheme_name": "AICTE - Pragati Scholarship Scheme For Girl Students (Technical Degree)",
-    "department": "All India Council For Technical Education",
-    "eligible_category": "Girl students in AICTE-approved technical degree courses",
-    "income_limit": 800000,
-    "benefit": "Rs 50,000 per year (lump sum)",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": true
-  },
-  {
-    "id": 6,
-    "scheme_name": "AICTE - Pragati Scholarship Scheme For Girl Students (Technical Diploma)",
-    "department": "All India Council For Technical Education",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 7,
-    "scheme_name": "AICTE - Saksham Scholarship Scheme For Specially Abled Student (Technical Diploma)",
-    "department": "All India Council For Technical Education",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 8,
-    "scheme_name": "AICTE - Saksham Scholarship Scheme For Specially Abled Student (Technical Degree)",
-    "department": "All India Council For Technical Education",
-    "eligible_category": "Specially abled students",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 9,
-    "scheme_name": "AICTE - Swanath Scholarship Scheme (Technical Diploma)",
-    "department": "All India Council For Technical Education",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 10,
-    "scheme_name": "Ishan Uday Special Scholarship Scheme For NER",
-    "department": "UGC",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 11,
-    "scheme_name": "National Scholarship For Post Graduate Studies",
-    "department": "UGC",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 12,
-    "scheme_name": "Financial Assistance For Education To The Wards Of Beedi/Cine/Iomc/Lsdm- Post Matric",
-    "department": "Ministry of Labour & Employment",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 13,
-    "scheme_name": "Financial Assistance For Education To The Wards Of Beedi/Cine/Iomc/Lsdm- Pre Matric",
-    "department": "Ministry of Labour & Employment",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 14,
-    "scheme_name": "PM YASASVI Central Sector Scheme Of Top Class Education In Schools For OBC, EBC And DNT Students",
-    "department": "Department of Social Justice & Empowerment(Backward Classes)",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 15,
-    "scheme_name": "PM YASASVI Central Sector Scheme Of Top Class Education In College For OBC, EBC And DNT Students",
-    "department": "Department of Social Justice & Empowerment(Backward Classes)",
-    "eligible_category": "OBC / EBC / DNT",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 16,
-    "scheme_name": "National Renewable Energy Fellowship Scheme",
-    "department": "Ministry of New And Renewable Energy",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 17,
-    "scheme_name": "Stipend Scheme For Under Graduate And Post Graduate Studies In Indian Statistical Institute-Kolkata",
-    "department": "Ministry of Statistics and Programme Implementation",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 18,
-    "scheme_name": "Icar National Talent Scholarship(Nts-Ug)",
-    "department": "Department of Agriculture Research and Education",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 19,
-    "scheme_name": "Icar Post Graduate Scholarship(Pgs)",
-    "department": "Department of Agriculture Research and Education",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 20,
-    "scheme_name": "Icar National Talent Scholarship(Nts-Pg)",
-    "department": "Department of Agriculture Research and Education",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 21,
-    "scheme_name": "Icar Junior Research Fellowships(Jrf) And Senior Research Fellowships(Srf)",
-    "department": "Department of Agriculture Research and Education",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 22,
-    "scheme_name": "Central Sector Scholarship Of Top Class Education For SC Students",
-    "department": "Department of Social Justice & Empowerment",
-    "eligible_category": "SC",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 23,
-    "scheme_name": "Free Coaching For Scs OBCs And Beneficiaries Of PM Cares Children Scheme",
-    "department": "Department of Social Justice & Empowerment",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 24,
-    "scheme_name": "Pre Matric Scholarship For Students With Disabilities",
-    "department": "Department of Empowerment of Persons with Disabilities",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 25,
-    "scheme_name": "Post Matric Scholarship For Students With Disabilities",
-    "department": "Department of Empowerment of Persons with Disabilities",
-    "eligible_category": "Students with disabilities",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 26,
-    "scheme_name": "Scholarship For Top Class Education For Students With Disabilities",
-    "department": "Department of Empowerment of Persons with Disabilities",
-    "eligible_category": "Students with disabilities",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 27,
-    "scheme_name": "National Means Cum Merit Scholarship",
-    "department": "Department of School Education & Literacy",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 28,
-    "scheme_name": "PM-USP – Central Sector Scheme Of Scholarship For College And University Students (CSSS)",
-    "department": "Department of Higher Education",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 29,
-    "scheme_name": "National Fellowship And Scholarship For Higher Education Of ST Students - Scholarship (Formally Top Class Education For Schedule Tribe Students)",
-    "department": "Ministry of Tribal Affairs",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 30,
-    "scheme_name": "Financial Support To The Students Of NER For Higher Professional Courses(NEC Merit Scholarship)",
-    "department": "North Eastern Council(NEC),DoNER",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 31,
-    "scheme_name": "Prime Minister's Scholarship Scheme For Ministry Of Railways",
-    "department": "Ministry of Railways (Railway Board)",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 32,
     "scheme_name": "Rajarshi Chhatrapati Shahu Maharaj Education Fee Scholarship Scheme",
     "department": "Directorate of Technical Education, Maharashtra",
     "eligible_category": "EBC / EWS / SEBC",
     "income_limit": 800000,
-    "benefit": "Tuition and exam fee: 100% for girls, 50% for boys",
+    "benefit": "Male: Academic fees 50%, Examination fee 50%; Female: Academic fees 100%, Examination fee 100%",
     "source_url": "https://dte.maharashtra.gov.in/rajarshi-chhatrapati-shahu-maharaj",
     "verified": true
   },
   {
-    "id": 33,
+    "id": 2,
     "scheme_name": "Dr. Punjabrao Deshmukh Hostel Subsistence Allowance Scheme",
     "department": "Directorate of Technical Education, Maharashtra",
     "eligible_category": "EBC / EWS / SEBC",
     "income_limit": 800000,
-    "benefit": "Hostel allowance Rs 38,000 to Rs 60,000 per year depending on city",
+    "benefit": "Total amount Rs 38,000 to Rs 60,000",
     "source_url": "https://dte.maharashtra.gov.in/dr-panjabrao-deshmukh-vastigruh-nirvah-bhatta-yojna",
     "verified": true
   },
   {
-    "id": 34,
-    "scheme_name": "Pragati Scholarship Scheme for Girls (Degree/Diploma)",
+    "id": 3,
+    "scheme_name": "Merit-Cum-Means Scholarship Scheme",
     "department": "Directorate of Technical Education, Maharashtra",
-    "eligible_category": "Girl students in AICTE-approved degree/diploma courses",
-    "income_limit": 800000,
-    "benefit": "Rs 50,000 per year (lump sum)",
-    "source_url": "https://dte.maharashtra.gov.in/pragati-scholarship-scheme/",
+    "eligible_category": "Minority",
+    "income_limit": 250000,
+    "benefit": "Total amount Rs 25,000 to Rs 30,000",
+    "source_url": "https://dte.maharashtra.gov.in/merit-cum-means/",
     "verified": true
   },
   {
-    "id": 35,
-    "scheme_name": "Merit-Cum-Means",
+    "id": 4,
+    "scheme_name": "Scholarships for Higher Education Abroad to meritorious boys and girls belonging to Economically weaker sections of Open category",
     "department": "Directorate of Technical Education, Maharashtra",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://dte.maharashtra.gov.in/merit-cum-means/",
-    "verified": false
-  },
-  {
-    "id": 36,
-    "scheme_name": "Foreign Scholarship",
-    "department": "Directorate of Technical Education, Maharashtra",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
+    "eligible_category": "EWS",
+    "income_limit": 800000,
+    "benefit": "Tuition Fee mentioned by the University; Full amount of personal health insurance",
     "source_url": "https://dte.maharashtra.gov.in/foreign-scholarship-2022/",
-    "verified": false
+    "verified": true
   },
   {
-    "id": 37,
-    "scheme_name": "Scholarship for students of minority communities pursuing Higher and Professional courses",
+    "id": 5,
+    "scheme_name": "Scholarship Scheme for Minority Students of the State pursuing Higher Professional Courses (Part - 1 excluding Medical Courses)",
     "department": "Directorate of Technical Education, Maharashtra",
-    "eligible_category": "Minority communities",
-    "income_limit": null,
-    "benefit": "VERIFY",
+    "eligible_category": "EWS / Minority",
+    "income_limit": 800000,
+    "benefit": "Scholarships Professional Male: Scholarship Amount Actual annual tuition fee and examination fee or Rs. 50,000 /- Whichever amount is less.",
     "source_url": "https://dte.maharashtra.gov.in/scholarship-for-students-of-minority-communities-pursuing-higher-and-professional-courses",
-    "verified": false
+    "verified": true
   },
   {
-    "id": 38,
-    "scheme_name": "Scholarship For Top Class Education for Students with Disabilities (DTE page)",
+    "id": 6,
+    "scheme_name": "Scholarship For Top Class Education for Students with Disabilities",
     "department": "Directorate of Technical Education, Maharashtra",
     "eligible_category": "Students with disabilities",
-    "income_limit": null,
-    "benefit": "VERIFY",
+    "income_limit": 800000,
+    "benefit": "Reimbursement of admission fees and academic fees payable to the institution/university: Amount Up to Rs.1,90,000/- per annum (subject to actual amount)",
     "source_url": "https://dte.maharashtra.gov.in/scholarship-for-top-class-education-for-students-with-disabilities",
-    "verified": false
+    "verified": true
   },
   {
-    "id": 39,
-    "scheme_name": "Saksham Scholarship Scheme (DTE page)",
+    "id": 7,
+    "scheme_name": "Pragati Scholarship Scheme for Girls (Degree/Diploma)",
     "department": "Directorate of Technical Education, Maharashtra",
-    "eligible_category": "Students with disabilities",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://dte.maharashtra.gov.in/saksham-scholarship-scheme",
-    "verified": false
-  },
-  {
-    "id": 40,
-    "scheme_name": "National Scholarship Scheme for Post Graduate Studies (DTE page)",
-    "department": "Directorate of Technical Education, Maharashtra",
-    "eligible_category": "Post-graduate students",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://dte.maharashtra.gov.in/%E0%A4%AA%E0%A4%A6%E0%A4%B5%E0%A5%8D%E0%A4%AF%E0%A5%81%E0%A4%A4%E0%A5%8D%E0%A4%A4%E0%A4%B0-%E0%A4%AA%E0%A4%A6%E0%A4%B5%E0%A5%80-%E0%A4%85%E0%A4%AD%E0%A5%8D%E0%A4%AF%E0%A4%BE%E0%A4%B8%E0%A4%BE%E0%A4%B8",
-    "verified": false
-  },
-  {
-    "id": 41,
-    "scheme_name": "Swanath Scholarship Scheme (DTE page)",
-    "department": "Directorate of Technical Education, Maharashtra",
-    "eligible_category": "VERIFY",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://dte.maharashtra.gov.in/swanath-scholarship-scheme-e",
-    "verified": false
-  },
-  {
-    "id": 42,
-    "scheme_name": "Post Matric Scholarship Schemes Minorities",
-    "department": "Ministry of Minority Affairs",
-    "eligible_category": "Minority communities",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
-  },
-  {
-    "id": 43,
-    "scheme_name": "Merit-Cum-Means Scholarship For Professional And Technical Courses",
-    "department": "Ministry of Minority Affairs",
-    "eligible_category": "Minority communities",
-    "income_limit": null,
-    "benefit": "VERIFY",
-    "source_url": "https://scholarships.gov.in/All-Scholarships",
-    "verified": false
+    "eligible_category": "Girl students",
+    "income_limit": 800000,
+    "benefit": "Fees payable to the organization, computer stationery, books, equipment, software, etc.: Lump sum Amount रु .50,000/- per annum",
+    "source_url": "https://dte.maharashtra.gov.in/pragati-scholarship-scheme/",
+    "verified": true
   }
 ]

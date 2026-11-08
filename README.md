@@ -47,11 +47,16 @@ Each scheme is a dict with: `scheme_name`, `department`, `eligible_category`, `i
 - `app/cli.py` - menu program that uses the functions in `records.py`
 
 ## Day 3
-- `app/fetch.py` - downloads the NSP All-Scholarships page and three DTE scheme pages into `data/raw/` with timeouts, retries and error handling
-- `app/ingest.py` - parses the downloaded pages into the record fields, skips bad rows with a log message, fills missing fields from the hand-collected records, and saves `data/records.json` (43 records)
+- `app/fetch.py` - downloads the NSP All-Scholarships page and the 10 DTE Scholarship Section pages into `data/raw/` with timeouts, retries and error handling
+- `app/ingest.py` - parses each downloaded DTE scheme page into the record fields (scheme name, eligible category, income limit, benefit), skips incomplete pages with a log message, and saves `data/records.json`
 - `app/models.py` - `Record` dataclass for one scheme
-- `app/records.py` - `load_records()` now reads `data/records.json` (falls back to `sample_records.py`); `load_record_objects()` returns `Record` objects
+- `app/records.py` - `load_records()` reads `data/records.json`; `load_record_objects()` returns `Record` objects
 - `day03_models_demo.py` - converts loaded dicts into `Record` objects
+
+## Notes
+- The DTE site sometimes returns a 503 error. `fetch.py` retries and skips files it already has; use `python -m app.fetch --force` to download everything again.
+- The NSP page lists scheme names and dates only; scheme details are in guideline PDFs that NSP does not allow scripts to download, so NSP schemes are not in `records.json`.
+- `data/sample_records.py` is the Day 2 hand-collected list and is not used by `ingest.py`.
 
 ## Day 4
 - `app/main.py` - FastAPI service with these endpoints:

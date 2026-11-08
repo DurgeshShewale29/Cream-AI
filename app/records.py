@@ -3,21 +3,18 @@ import logging
 from pathlib import Path
 
 from app.models import Record
-from data.sample_records import RECORDS as SAMPLE_RECORDS
 
 RECORDS_JSON = Path(__file__).resolve().parent.parent / "data" / "records.json"
 
 
 def load_records():
-    """Return all records (list of dicts). Uses data/records.json if it exists,
-    otherwise falls back to the hand-collected data/sample_records.py."""
+    """Return all records (list of dicts) from data/records.json."""
     try:
         with open(RECORDS_JSON, encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
-        logging.warning("records.json not found, using sample_records.py "
-                        "(run: python -m app.fetch, then python -m app.ingest)")
-        return list(SAMPLE_RECORDS)
+        logging.error("records.json not found. Run: python -m app.fetch, then python -m app.ingest")
+        return []
 
 
 def load_record_objects():
