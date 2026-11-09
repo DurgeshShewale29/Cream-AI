@@ -49,3 +49,17 @@ The temperature setting controls how adventurous the pick is. Low temperature pi
 ## 7. What this means for ScholarSetu
 
 If I ask a plain LLM "Which scholarship fits an OBC girl with Rs 3.2 lakh income?", it may confidently invent a scheme or an old deadline. So ScholarSetu will first find the matching schemes in its own data (`data/records.json`), give only those to the model, and answer from them with the source link. If the data does not contain the answer, it should say "I don't know" instead of guessing. I will build this in the next weeks.
+
+
+## ScholarSetu user questions
+
+1. I am OBC with Rs 3.2 lakh income. Which scholarship fits me?
+2. What is the difference between EBC and OBC Freeship?
+3. Which documents do I need for MahaDBT?
+4. Is there an AICTE or NSP scholarship I can apply for?
+5. What is the last date to apply this year?
+6. What is the hostel fee at Sanjivani College of Engineering? *(my data cannot answer this one, so ScholarSetu should say "I don't know")*
+7. I am a girl studying engineering. Which schemes cover my tuition fee?
+8. My family income is Rs 6 lakh and I am from an EWS family. Can I get the Rajarshi Chhatrapati Shahu Maharaj scholarship?
+9. How much hostel allowance can I get if my parents are small-land farmers?
+10. I belong to a minority community and my family income is Rs 2 lakh. Which scholarship can I apply for?
