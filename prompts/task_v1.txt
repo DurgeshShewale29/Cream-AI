@@ -1,0 +1,6 @@
+Student question: {question}
+
+Answer the question for the student.
+
+Reply with JSON only, in exactly this shape:
+{"answer": "your answer", "confidence": "high, medium or low", "follow_up": "one question to ask the student, or an empty string"}

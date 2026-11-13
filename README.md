@@ -15,6 +15,7 @@ ScholarSetu/
 │   ├── cli.py               # menu program that uses records.py
 │   ├── fetch.py             # downloads source pages into data/raw/
 │   ├── ingest.py            # cleans downloaded pages into data/records.json
+│   ├── llm.py               # asks Groq or Gemini (keys come from .env)
 │   ├── main.py              # FastAPI service
 │   ├── models.py            # Record dataclass
 │   ├── records.py           # load_records, search, count_by, get_by_id
@@ -24,6 +25,16 @@ ScholarSetu/
 │   ├── questions.json       # saved by POST /questions (not pushed to GitHub)
 │   ├── records.json         # clean records created by ingest.py
 │   └── sample_records.py    # 20 hand-collected schemes
+├── docs/
+│   └── how_llms_work.md     # how LLMs work + 10 ScholarSetu questions
+├── eval/
+│   ├── prompt_compare.md    # v1 vs v2 prompt comparison
+│   └── run_prompt_compare.py
+├── prompts/
+│   ├── system.txt           # ScholarSetu system prompt
+│   ├── task_v1.txt          # task prompt, version 1
+│   └── task_v2.txt          # task prompt, version 2
+├── .env.example             # copy to .env and add your key (.env is private)
 ├── day01_intro.py
 ├── day01_menu.py
 ├── day02_search.py
@@ -34,7 +45,7 @@ ScholarSetu/
 
 ## Record fields
 Each scheme is a dict with: `scheme_name`, `department`, `eligible_category`, `income_limit`, `benefit`, `source_url`, plus `id` and `verified`.
-`VERIFY` / `None` means the value has not been collected yet. `verified: true` means it was checked on the official page.
+`income_limit` is `null` when the official page does not state one. `verified: true` means the record was read from the official page.
 
 ## Day 1
 - `day01_intro.py` - prints the project card and asks for name and question
@@ -53,11 +64,6 @@ Each scheme is a dict with: `scheme_name`, `department`, `eligible_category`, `i
 - `app/records.py` - `load_records()` reads `data/records.json`; `load_record_objects()` returns `Record` objects
 - `day03_models_demo.py` - converts loaded dicts into `Record` objects
 
-## Notes
-- The DTE site sometimes returns a 503 error. `fetch.py` retries and skips files it already has; use `python -m app.fetch --force` to download everything again.
-- The NSP page lists scheme names and dates only; scheme details are in guideline PDFs that NSP does not allow scripts to download, so NSP schemes are not in `records.json`.
-- `data/sample_records.py` is the Day 2 hand-collected list and is not used by `ingest.py`.
-
 ## Day 4
 - `app/main.py` - FastAPI service with these endpoints:
   - `GET /health` - service status and number of schemes loaded
@@ -67,6 +73,15 @@ Each scheme is a dict with: `scheme_name`, `department`, `eligible_category`, `i
   - `POST /questions` - saves a user question to `data/questions.json`
 - `app/smart_search.py` - ranks records with TF-IDF + cosine similarity; powers `/search`
 - `analysis/explore.py` - prints 3 facts about the records using pandas: data completeness, departments with the most schemes, and the collected income limits
+
+## Day 5
+- `docs/how_llms_work.md` - notes on how LLMs work, with one diagram, and 10 ScholarSetu user questions (Q6 is a question the data cannot answer)
+
+## Day 6
+- `app/llm.py` - one function, `ask_llm()`, that talks to Groq or Gemini (timeouts, retries, rate-limit handling); keys and model names come from `.env`
+- `app/main.py` - new `POST /chat`: answers a student question with the ScholarSetu system prompt and returns JSON with `answer`, `confidence` (`high`, `medium` or `low`) and `follow_up`; the optional `prompt_version` (`v1` or `v2`) picks the task prompt
+- `prompts/` - `system.txt` and two task prompts, `task_v1.txt` and `task_v2.txt`
+- `eval/prompt_compare.md` - the two prompt versions compared on the 10 ScholarSetu questions; `eval/run_prompt_compare.py` creates it
 
 ## How to run
 Run all commands from the project root folder.
@@ -86,12 +101,20 @@ Run all commands from the project root folder.
 
     python analysis/explore.py
 
+### Set up the API key (needed for /chat)
+1. Get a free key from https://console.groq.com/keys (or https://aistudio.google.com/apikey for Gemini).
+2. Copy `.env.example` to `.env` and put your key in it. `.env` is private and is not committed.
+
 ### Run the API
     uvicorn app.main:app --reload
 
-Then open http://127.0.0.1:8000/docs to try every endpoint.
+Then open http://127.0.0.1:8000/docs to try every endpoint, including `POST /chat`.
+
+### Compare the two prompts
+    python eval/run_prompt_compare.py
 
 ## Notes
 - The DTE site sometimes returns a 503 error. `fetch.py` retries and skips files it already has; use `python -m app.fetch --force` to download everything again.
-- `records.json` includes NSP schemes that are not for engineering students. They will be filtered later.
-- Most scheme details (income limit, benefit, eligibility) are still `VERIFY` and are being filled in from the official pages.
+- The NSP page lists scheme names and dates only; scheme details are in guideline PDFs that NSP does not allow scripts to download, so NSP schemes are not in `records.json`.
+- `data/sample_records.py` is the Day 2 hand-collected list and is not used by `ingest.py`.
+- `/chat` does not use `records.json` yet; the answers come from the model and the system prompt only.

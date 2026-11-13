@@ -1,0 +1,12 @@
+Student question: {question}
+
+Work through these steps silently, then give only the final JSON:
+1. Note any details the student gave: category (OBC, EWS, SC, ST, minority, open), family income, gender, course and year.
+2. Name only schemes you are sure exist (for example the Rajarshi Chhatrapati Shahu Maharaj fee scholarship, the Pragati scholarship for girls, Dr. Panjabrao Deshmukh hostel allowance, MahaDBT and NSP schemes). Give one short reason for each.
+3. Do not state an amount, income limit or date unless you are sure. Otherwise say "check the official portal".
+4. If the question is not about scholarships, say you do not have that information and set confidence to "low".
+5. Set confidence to "high" only if you are sure of both the scheme and its rule, "medium" if some detail is missing, and "low" if you are guessing or the question is outside scholarships.
+6. In follow_up, ask for the one detail that would help most (for example family income or category). Use an empty string if nothing is needed.
+
+Reply with JSON only, in exactly this shape:
+{"answer": "your answer", "confidence": "high, medium or low", "follow_up": "one question or an empty string"}

@@ -1,15 +1,18 @@
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from app.llm import LLMError, ask_llm
 from app.records import get_by_id, load_records
 from app.smart_search import smart_search
 
-QUESTIONS_JSON = Path(__file__).resolve().parent.parent / "data" / "questions.json"
+BASE_DIR = Path(__file__).resolve().parent.parent
+QUESTIONS_JSON = BASE_DIR / "data" / "questions.json"
+PROMPTS_DIR = BASE_DIR / "prompts"
 
 app = FastAPI(
     title="ScholarSetu API",
@@ -44,6 +47,17 @@ class QuestionIn(BaseModel):
     name: Optional[str] = Field(default=None, max_length=100)
 
 
+class ChatIn(BaseModel):
+    question: str = Field(min_length=3, max_length=500)
+    prompt_version: Literal["v1", "v2"] = "v2"
+
+
+class ChatOut(BaseModel):
+    answer: str
+    confidence: Literal["high", "medium", "low"]
+    follow_up: str
+
+
 class QuestionSaved(BaseModel):
     id: int
     question: str
@@ -73,6 +87,36 @@ def save_question(question, name=None):
     with open(QUESTIONS_JSON, "w", encoding="utf-8") as f:
         json.dump(questions, f, indent=2, ensure_ascii=False)
     return entry
+
+
+def load_prompt(filename):
+    """Read one prompt file from the prompts/ folder."""
+    return (PROMPTS_DIR / filename).read_text(encoding="utf-8").strip()
+
+
+def parse_chat_reply(raw):
+    """Turn the model's text into (answer, confidence, follow_up). The flag says if it was valid JSON."""
+    text = raw.strip()
+    try:
+        data = json.loads(text[text.find("{"):text.rfind("}") + 1])
+        answer = str(data["answer"]).strip()
+        if not answer:
+            raise ValueError("empty answer")
+        confidence = str(data.get("confidence", "low")).strip().lower()
+        if confidence not in ("high", "medium", "low"):
+            confidence = "low"
+        follow_up = str(data.get("follow_up") or "").strip()
+        return {"answer": answer, "confidence": confidence, "follow_up": follow_up}, True
+    except (ValueError, KeyError, TypeError):
+        return {"answer": text[:1000], "confidence": "low", "follow_up": ""}, False
+
+
+def answer_question(question, version="v2"):
+    """Ask the model one question using the system prompt and a task prompt version."""
+    system_prompt = load_prompt("system.txt")
+    task_prompt = load_prompt(f"task_{version}.txt").replace("{question}", question.strip())
+    raw = ask_llm(system_prompt, task_prompt, json_mode=True)
+    return parse_chat_reply(raw)
 
 
 @app.get("/health")
@@ -109,3 +153,14 @@ def post_question(body: QuestionIn):
         return save_question(body.question, body.name)
     except OSError:
         raise HTTPException(status_code=500, detail="Could not save the question")
+
+
+@app.post("/chat", response_model=ChatOut)
+def chat(body: ChatIn):
+    try:
+        reply, _ = answer_question(body.question, body.prompt_version)
+    except LLMError as error:
+        raise HTTPException(status_code=503, detail=str(error))
+    except OSError:
+        raise HTTPException(status_code=500, detail="Could not read the prompt files")
+    return reply
