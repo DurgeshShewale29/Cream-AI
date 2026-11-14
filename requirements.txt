@@ -4,3 +4,5 @@ uvicorn
 pandas
 scikit-learn
 python-dotenv
+sentence-transformers
+chromadb
