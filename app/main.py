@@ -42,6 +42,21 @@ class SearchResult(BaseModel):
     results: list[ScoredScheme]
 
 
+class SemanticHit(BaseModel):
+    score: float
+    title: str
+    source: str
+    page: int
+    chunk_index: int
+    text: str
+
+
+class SemanticResult(BaseModel):
+    query: str
+    count: int
+    results: list[SemanticHit]
+
+
 class QuestionIn(BaseModel):
     question: str = Field(min_length=3, max_length=500)
     name: Optional[str] = Field(default=None, max_length=100)
@@ -145,6 +160,22 @@ def search_records(
 ):
     results = smart_search(q, top_k=limit)
     return {"query": q, "count": len(results), "results": results}
+
+
+@app.get("/search/semantic", response_model=SemanticResult)
+def semantic_search_records(
+    q: str = Query(..., min_length=2, description="Your question, e.g. hostel allowance for farmers' children"),
+    limit: int = Query(5, ge=1, le=20, description="How many chunks to return"),
+):
+    try:
+        from app.vectorstore import search as vector_search  # loaded only when this endpoint is used
+        hits = vector_search(q, top_k=limit)
+    except ImportError:
+        raise HTTPException(status_code=503,
+                            detail="Semantic search needs more packages. Run: pip install -r requirements.txt")
+    except RuntimeError as error:  # includes EmbeddingError
+        raise HTTPException(status_code=503, detail=str(error))
+    return {"query": q, "count": len(hits), "results": hits}
 
 
 @app.post("/questions", response_model=QuestionSaved, status_code=201)

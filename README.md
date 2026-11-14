@@ -12,15 +12,19 @@ ScholarSetu/
 ├── analysis/
 │   └── explore.py           # prints 3 facts about the records (pandas)
 ├── app/
+│   ├── chunking.py          # cuts the downloaded pages into chunks (source, page, title)
 │   ├── cli.py               # menu program that uses records.py
+│   ├── embed.py             # embeddings + semantic search over the chunks
 │   ├── fetch.py             # downloads source pages into data/raw/
 │   ├── ingest.py            # cleans downloaded pages into data/records.json
 │   ├── llm.py               # asks Groq or Gemini (keys come from .env)
 │   ├── main.py              # FastAPI service
 │   ├── models.py            # Record dataclass
 │   ├── records.py           # load_records, search, count_by, get_by_id
-│   └── smart_search.py      # TF-IDF + cosine ranking, powers /search
+│   ├── smart_search.py      # TF-IDF + cosine ranking, powers /search
+│   └── vectorstore.py       # persistent Chroma index, powers /search/semantic
 ├── data/
+│   ├── chroma/              # Chroma index (not pushed to GitHub)
 │   ├── raw/                 # downloaded pages (not pushed to GitHub)
 │   ├── questions.json       # saved by POST /questions (not pushed to GitHub)
 │   ├── records.json         # clean records created by ingest.py
@@ -29,7 +33,8 @@ ScholarSetu/
 │   └── how_llms_work.md     # how LLMs work + 10 ScholarSetu questions
 ├── eval/
 │   ├── prompt_compare.md    # v1 vs v2 prompt comparison
-│   └── run_prompt_compare.py
+│   ├── run_prompt_compare.py
+│   └── search_results.md    # top semantic-search hits for the 10 questions
 ├── prompts/
 │   ├── system.txt           # ScholarSetu system prompt
 │   ├── task_v1.txt          # task prompt, version 1
@@ -83,6 +88,13 @@ Each scheme is a dict with: `scheme_name`, `department`, `eligible_category`, `i
 - `prompts/` - `system.txt` and two task prompts, `task_v1.txt` and `task_v2.txt`
 - `eval/prompt_compare.md` - the two prompt versions compared on the 10 ScholarSetu questions; `eval/run_prompt_compare.py` creates it
 
+## Day 7
+- `app/chunking.py` - cuts the downloaded pages into chunks (about 120 words, 25 words overlap); the NSP list gives one chunk per scheme. Every chunk keeps its source URL, page and title (these are web pages, so the page is always 1)
+- `app/embed.py` - turns text into embeddings (sentence-transformers, `all-MiniLM-L6-v2`) and runs semantic search; `python -m app.embed` searches the 10 ScholarSetu questions and writes `eval/search_results.md`
+- `eval/search_results.md` - the top 3 hits for each of the 10 questions, with scores; a best score below 0.30 is marked "no confident match"
+- `app/vectorstore.py` - indexes all chunks into a persistent Chroma collection (`data/chroma/`); the index is built automatically on the first search, or rebuilt with `python -m app.vectorstore`
+- `app/main.py` - new `GET /search/semantic?q=` returns the closest chunks with `score`, `title`, `source`, `page` and `text`
+
 ## How to run
 Run all commands from the project root folder.
 
@@ -101,6 +113,10 @@ Run all commands from the project root folder.
 
     python analysis/explore.py
 
+    python -m app.chunking
+    python -m app.embed
+    python -m app.vectorstore
+
 ### Set up the API key (needed for /chat)
 1. Get a free key from https://console.groq.com/keys (or https://aistudio.google.com/apikey for Gemini).
 2. Copy `.env.example` to `.env` and put your key in it. `.env` is private and is not committed.
@@ -108,13 +124,15 @@ Run all commands from the project root folder.
 ### Run the API
     uvicorn app.main:app --reload
 
-Then open http://127.0.0.1:8000/docs to try every endpoint, including `POST /chat`.
+Then open http://127.0.0.1:8000/docs to try every endpoint, including `POST /chat` and `GET /search/semantic`.
 
 ### Compare the two prompts
     python eval/run_prompt_compare.py
 
 ## Notes
 - The DTE site sometimes returns a 503 error. `fetch.py` retries and skips files it already has; use `python -m app.fetch --force` to download everything again.
-- The NSP page lists scheme names and dates only; scheme details are in guideline PDFs that NSP does not allow scripts to download, so NSP schemes are not in `records.json`.
+- The NSP page lists scheme names and dates only; scheme details are in guideline PDFs that NSP does not allow scripts to download, so NSP schemes are not in `records.json`. They are in the semantic search as one chunk per scheme (name, department, dates).
 - `data/sample_records.py` is the Day 2 hand-collected list and is not used by `ingest.py`.
 - `/chat` does not use `records.json` yet; the answers come from the model and the system prompt only.
+- The first run of `python -m app.embed` downloads the embedding model (about 90 MB), so it needs internet.
+- `data/chroma/` is not pushed to GitHub. Run `python -m app.vectorstore` to rebuild it after downloading new pages.
