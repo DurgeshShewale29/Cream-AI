@@ -1,0 +1,95 @@
+# Prompt comparison: v1 vs v2
+
+Run on 2026-11-14 with groq / openai/gpt-oss-120b, on the 10 ScholarSetu questions from `docs/how_llms_work.md`.
+
+## The two prompt versions
+- **v1** (`prompts/task_v1.txt`): a short prompt that only asks for the answer in JSON.
+- **v2** (`prompts/task_v2.txt`): a step by step prompt. It tells the model to note the student's details, name only schemes it is sure of, never guess amounts or dates, say so when a question is not about scholarships, and use a fixed rule for the confidence value.
+
+## Numbers counted by the script
+| Measure | v1 | v2 |
+|---|---|---|
+| Replies that were valid JSON | 10/10 | 10/10 |
+| Average answer length (words) | 51 | 48 |
+| Confidence high / medium / low | 0 / 8 / 2 | 0 / 9 / 1 |
+| Replies with a follow-up question | 9/10 | 9/10 |
+| Calls that failed | 0/10 | 0/10 |
+
+## Answers side by side
+The Better and Why columns are my own judgement after reading both answers.
+
+| # | Question | v1 answer (confidence) | v2 answer (confidence) | Better | Why |
+|---|---|---|---|---|---|
+| 1 | I am OBC with Rs 3.2 lakh income. Which scholarship fits me? | You may be eligible for the Maharashtra State Merit Scholarship for OBC students (which generally has an income ceiling around Rs 4 lakh) and possibly other OBC‑specific schemes on the DTE or MahaDBT portals. Please check the exact eligibility, amount and... (medium) | You may be eligible for the Rajarshi Chhatrapati Shahu Maharaj fee scholarship, which is offered to OBC students whose family income is within the prescribed limit. Also check the MahaDBT portal and the National Scholarship Portal for any OBC‑specific... (medium) | v2 | Names a real scheme from my DTE data and gives no made-up number. v1 invents a "State Merit Scholarship" with a Rs 4 lakh limit that I could not find. v2 is still not exact: my DTE page lists Rajarshi for EBC, EWS and SEBC students, not OBC. |
+| 2 | What is the difference between EBC and OBC Freeship? | EBC Freeship is for students belonging to the Economically Backward Class category, while OBC Freeship is for students belonging to the Other Backward Class category. Both schemes waive tuition fees, but they have different eligibility rules – especially the... (medium) | EBC Freeship is for students classified as Economically Backward Class, while OBC Freeship is for students in the Other Backward Class category. Both are offered by DTE Maharashtra through the MahaDBT portal, but they have separate eligibility rules and... (medium) | Tie | Both only repeat the two names. Neither explains the real difference. |
+| 3 | Which documents do I need for MahaDBT? | You will usually need your Aadhaar card, an income certificate or other proof of family income, your 10th/12th mark sheets, the college fee receipt, a bank passbook or cancelled cheque, and a recent passport‑size photo. Please verify the exact list on the... (medium) | For MahaDBT you usually need your Aadhaar card, a recent passport‑size photo, your latest income certificate (or salary slips), your class 10/12 mark sheets or diploma certificate, the fee receipt from your college, a bank account proof (passbook or cancelled... (medium) | v2 | Adds the caste/tribe certificate for reserved categories and asks for the student's category. |
+| 4 | Is there an AICTE or NSP scholarship I can apply for? | Yes, AICTE offers scholarships that are listed on the National Scholarship Portal (NSP). You can apply through NSP if you meet the eligibility criteria for your course and year. Please check the official portal for the latest details. (medium) | Yes, there are AICTE and NSP scholarships such as the AICTE Pragati Scholarship for girls, the AICTE Scholarship for SC/ST students, and various Central‑Sector schemes listed on the National Scholarship Portal. Check the official portals... (medium) | v2 | Names the real Pragati scheme. But it also lists an AICTE SC/ST scholarship that is not among the AICTE schemes on the NSP list (Pragati, Saksham, Swanath), so that part needs checking. v1 is safe but vague. |
+| 5 | What is the last date to apply this year? | I’m not sure which scholarship you mean. Application deadlines vary each year for different schemes. Please tell me the name of the scholarship or scheme you are interested in, and you can also check the official portal (mahadbt.maharashtra.gov.in,... (medium) | The last date to apply depends on the specific scholarship (e.g., Rajarshi Chhatrapati Shahu Maharaj fee scholarship, Pragati scholarship for girls, Dr. Panjabrao Deshmukh hostel allowance, MahaDBT or NSP schemes). Please check the official portal mahadb...... (medium) | v1 | Asks which scheme the student means and gives the three portals. v2's answer has a cut-off link ("mahadb..."). |
+| 6 | What is the hostel fee at Sanjivani College of Engineering? | I’m sorry, I don’t have information about hostel fees at Sanjivani College of Engineering. Please contact the college administration or the DTE Maharashtra for details. (medium) | I’m sorry, I don’t have information on the hostel fee at Sanjivani College of Engineering. Please contact the college’s administration or check their official website for the latest fee details. (low) | v2 | Both say they don't know, but v2 gives low confidence, which fits a question with no data. v1 says medium and points to DTE, which does not set hostel fees. |
+| 7 | I am a girl studying engineering. Which schemes cover my tuition fee? | You may be eligible for DTE’s Merit‑Based and Minority/SC/ST/BC scholarships, the AICTE‑Women’s Scholarship, and the National Scholarship Portal’s Central Sector Scheme for Girls. All of these can cover part or all of your tuition fee, but the exact amount... (medium) | You may be eligible for the Rajarshi Chhatrapati Shahu Maharaj fee scholarship (for eligible SC/ST/OBC students), the Pragati Scholarship for girls (covers tuition fees), and any tuition‑fee scholarships listed on the MahaDBT portal or the National... (medium) | v2 | Names Rajarshi and Pragati, which are real and cover girls' tuition. v1 lists schemes ("AICTE-Women's Scholarship") that I could not find in my data. v2 wrongly says Rajarshi is for SC/ST/OBC; my page says EBC, EWS and SEBC. |
+| 8 | My family income is Rs 6 lakh and I am from an EWS family. Can I get the Rajarshi Chhatrapati Shahu Maharaj scholarship? | I’m not certain about the exact eligibility for the Rajarshi Chhatrapati Shahu Maharaj scholarship with a family income of Rs 6 lakh and EWS status. The criteria can change each year and may depend on factors like your course, year of study, and other... (low) | The Rajarshi Chhatrapati Shahu Maharaj fee scholarship exists for EWS students, but eligibility depends on the income ceiling and the specific course/year you are studying. With a family income of Rs 6 lakh you should check the official portal... (medium) | v2 | Correctly says the scheme exists for EWS students. v1 only says "not sure". Neither can say yes (my DTE data says income up to Rs 8 lakh) because the model cannot see my data. |
+| 9 | How much hostel allowance can I get if my parents are small-land farmers? | I’m not sure of the exact amount for hostel allowance for small‑land farmer families. The amount can vary by scheme, category and family income, and it may change each year. Please check the latest details on the DTE Maharashtra portal... (low) | There is a Dr. Panjabrao Deshmukh hostel‑allowance scheme for students whose parents are small‑land farmers. The amount you receive depends on your family’s annual income and your category, so you should check the DTE portal (dte.maharashtra.gov.in) or... (medium) | v2 | Names the right scheme (Dr. Panjabrao Deshmukh). Neither gives the amount: my data says Rs 38,000 to Rs 60,000. |
+| 10 | I belong to a minority community and my family income is Rs 2 lakh. Which scholarship can I apply for? | You may be eligible for the Maharashtra State Minority Scholarship, which is offered by DTE for students from minority communities with family income up to about Rs 2.5 lakh. Check the DTE portal (dte.maharashtra.gov.in) and the National Scholarship Portal... (medium) | You may be eligible for the Maharashtra State Minority Scholarship (offered through DTE/MahaDBT) and the Minority Scholarship listed on the National Scholarship Portal. Both schemes target minority students; please check the official portals for exact income... (medium) | Tie | v1's "about Rs 2.5 lakh" matches my Merit-Cum-Means page, but it is a guess. v2 gives no number. |
+
+## Full answers
+
+### Q1. I am OBC with Rs 3.2 lakh income. Which scholarship fits me?
+- **v1** (confidence: medium): You may be eligible for the Maharashtra State Merit Scholarship for OBC students (which generally has an income ceiling around Rs 4 lakh) and possibly other OBC‑specific schemes on the DTE or MahaDBT portals. Please check the exact eligibility, amount and deadline on mahadbt.maharashtra.gov.in or dte.maharashtra.gov.in.
+  - follow-up: What course and year of study are you currently in?
+- **v2** (confidence: medium): You may be eligible for the Rajarshi Chhatrapati Shahu Maharaj fee scholarship, which is offered to OBC students whose family income is within the prescribed limit. Also check the MahaDBT portal and the National Scholarship Portal for any OBC‑specific merit‑cum‑means schemes. Confirm the exact income ceiling and other conditions on the official sites.
+  - follow-up: Could you tell me your course of study and current year of enrollment?
+
+### Q2. What is the difference between EBC and OBC Freeship?
+- **v1** (confidence: medium): EBC Freeship is for students belonging to the Economically Backward Class category, while OBC Freeship is for students belonging to the Other Backward Class category. Both schemes waive tuition fees, but they have different eligibility rules – especially the family‑income ceiling and the specific caste list – so the amount and eligibility can vary. Please check the DTE Maharashtra portal for the exact income limits and other conditions.
+  - follow-up: Could you tell me your family’s annual income and whether you are classified as EBC or OBC?
+- **v2** (confidence: medium): EBC Freeship is for students classified as Economically Backward Class, while OBC Freeship is for students in the Other Backward Class category. Both are offered by DTE Maharashtra through the MahaDBT portal, but they have separate eligibility rules and income limits for each category. Check the official portal (mahadbt.maharashtra.gov.in or dte.maharashtra.gov.in) for the exact criteria and amounts.
+  - follow-up: Could you please share your family annual income?
+
+### Q3. Which documents do I need for MahaDBT?
+- **v1** (confidence: medium): You will usually need your Aadhaar card, an income certificate or other proof of family income, your 10th/12th mark sheets, the college fee receipt, a bank passbook or cancelled cheque, and a recent passport‑size photo. Please verify the exact list on the MahaDBT portal (mahadbt.maharashtra.gov.in) as requirements can change.
+  - follow-up: Which course and year are you applying for?
+- **v2** (confidence: medium): For MahaDBT you usually need your Aadhaar card, a recent passport‑size photo, your latest income certificate (or salary slips), your class 10/12 mark sheets or diploma certificate, the fee receipt from your college, a bank account proof (passbook or cancelled cheque) and, if you belong to a reserved category, the relevant caste/tribe certificate. Exact requirements can vary, so please check the official MahaDBT portal for the complete list.
+  - follow-up: Could you tell me your category (e.g., SC, ST, OBC, EWS, open)?
+
+### Q4. Is there an AICTE or NSP scholarship I can apply for?
+- **v1** (confidence: medium): Yes, AICTE offers scholarships that are listed on the National Scholarship Portal (NSP). You can apply through NSP if you meet the eligibility criteria for your course and year. Please check the official portal for the latest details.
+  - follow-up: Can you tell me your course/stream and current year of study?
+- **v2** (confidence: medium): Yes, there are AICTE and NSP scholarships such as the AICTE Pragati Scholarship for girls, the AICTE Scholarship for SC/ST students, and various Central‑Sector schemes listed on the National Scholarship Portal. Check the official portals (mahadbt.maharashtra.gov.in, scholarships.gov.in or dte.maharashtra.gov.in) for eligibility and application dates.
+  - follow-up: What is your reservation category (e.g., SC/ST/OBC/EWS/Open)?
+
+### Q5. What is the last date to apply this year?
+- **v1** (confidence: medium): I’m not sure which scholarship you mean. Application deadlines vary each year for different schemes. Please tell me the name of the scholarship or scheme you are interested in, and you can also check the official portal (mahadbt.maharashtra.gov.in, scholarships.gov.in or dte.maharashtra.gov.in) for the exact date.
+  - follow-up: Which scholarship or financial assistance scheme are you asking about?
+- **v2** (confidence: medium): The last date to apply depends on the specific scholarship (e.g., Rajarshi Chhatrapati Shahu Maharaj fee scholarship, Pragati scholarship for girls, Dr. Panjabrao Deshmukh hostel allowance, MahaDBT or NSP schemes). Please check the official portal mahadb... or dte.maharashtra.gov.in for the current deadline.
+  - follow-up: Which scholarship or scheme are you interested in (e.g., fee scholarship, hostel allowance, MahaDBT, NSP, etc.)?
+
+### Q6. What is the hostel fee at Sanjivani College of Engineering?
+- **v1** (confidence: medium): I’m sorry, I don’t have information about hostel fees at Sanjivani College of Engineering. Please contact the college administration or the DTE Maharashtra for details.
+- **v2** (confidence: low): I’m sorry, I don’t have information on the hostel fee at Sanjivani College of Engineering. Please contact the college’s administration or check their official website for the latest fee details.
+
+### Q7. I am a girl studying engineering. Which schemes cover my tuition fee?
+- **v1** (confidence: medium): You may be eligible for DTE’s Merit‑Based and Minority/SC/ST/BC scholarships, the AICTE‑Women’s Scholarship, and the National Scholarship Portal’s Central Sector Scheme for Girls. All of these can cover part or all of your tuition fee, but the exact amount depends on your family income, academic year and college. Please check the latest details on mahadbt.maharashtra.gov.in, dte.maharashtra.gov.in or scholarships.gov.in.
+  - follow-up: Can you tell me your family’s annual income and which year of engineering you are in?
+- **v2** (confidence: medium): You may be eligible for the Rajarshi Chhatrapati Shahu Maharaj fee scholarship (for eligible SC/ST/OBC students), the Pragati Scholarship for girls (covers tuition fees), and any tuition‑fee scholarships listed on the MahaDBT portal or the National Scholarship Portal. Check the official portals for exact eligibility, income limits and dates.
+  - follow-up: Could you tell us your family income and your social category (e.g., SC, ST, OBC, EWS, open)?
+
+### Q8. My family income is Rs 6 lakh and I am from an EWS family. Can I get the Rajarshi Chhatrapati Shahu Maharaj scholarship?
+- **v1** (confidence: low): I’m not certain about the exact eligibility for the Rajarshi Chhatrapati Shahu Maharaj scholarship with a family income of Rs 6 lakh and EWS status. The criteria can change each year and may depend on factors like your course, year of study, and other conditions. Please verify the latest details on the official DTE Maharashtra or MahaDBT portal.
+  - follow-up: Could you tell me which course and year of study you are currently in?
+- **v2** (confidence: medium): The Rajarshi Chhatrapati Shahu Maharaj fee scholarship exists for EWS students, but eligibility depends on the income ceiling and the specific course/year you are studying. With a family income of Rs 6 lakh you should check the official portal (mahadbt.maharashtra.gov.in or dte.maharashtra.gov.in) for the exact income limit and other criteria.
+  - follow-up: Could you tell me your course and current year of study?
+
+### Q9. How much hostel allowance can I get if my parents are small-land farmers?
+- **v1** (confidence: low): I’m not sure of the exact amount for hostel allowance for small‑land farmer families. The amount can vary by scheme, category and family income, and it may change each year. Please check the latest details on the DTE Maharashtra portal (dte.maharashtra.gov.in) or the MahaDBT portal. If you can share your student category (e.g., SC/ST/OBC/General) and your family’s annual income, I can try to give more specific guidance.
+  - follow-up: Could you tell me your student category (SC/ST/OBC/General) and your family’s annual income?
+- **v2** (confidence: medium): There is a Dr. Panjabrao Deshmukh hostel‑allowance scheme for students whose parents are small‑land farmers. The amount you receive depends on your family’s annual income and your category, so you should check the DTE portal (dte.maharashtra.gov.in) or MahaDBT for the latest details.
+  - follow-up: Could you tell us your family’s annual income (or the income range)?
+
+### Q10. I belong to a minority community and my family income is Rs 2 lakh. Which scholarship can I apply for?
+- **v1** (confidence: medium): You may be eligible for the Maharashtra State Minority Scholarship, which is offered by DTE for students from minority communities with family income up to about Rs 2.5 lakh. Check the DTE portal (dte.maharashtra.gov.in) and the National Scholarship Portal (scholarships.gov.in) for eligibility details, required documents and application dates. Confirm the latest criteria on the official sites.
+  - follow-up: What course and level (e.g., engineering, diploma, postgraduate) are you pursuing?
+- **v2** (confidence: medium): You may be eligible for the Maharashtra State Minority Scholarship (offered through DTE/MahaDBT) and the Minority Scholarship listed on the National Scholarship Portal. Both schemes target minority students; please check the official portals for exact income limits, amounts and application dates.
+  - follow-up: Which course and year are you studying?
+
+## My conclusion
+v2 is the better prompt overall. It was better on 7 of the 10 questions, v1 on 1 (Q5), and 2 were ties (Q2 and Q10). The main reason is that v2 names real schemes from my data (Rajarshi, Pragati, Dr. Panjabrao Deshmukh) and avoids made-up numbers, while v1 invented scheme names and an income limit in Q1 and Q7 that I could not find in my data. v2 still makes mistakes, for example it says Rajarshi is for OBC and SC/ST students while my DTE page says EBC, EWS and SEBC. For Q6, the question my data cannot answer, both versions said they don't have the information, but v2 also set confidence to low, which is the right signal. Neither prompt can give real amounts or income limits, such as Rs 38,000 to Rs 60,000 for the Panjabrao allowance, because the model does not see my data, so the next step is to give it my records (RAG).

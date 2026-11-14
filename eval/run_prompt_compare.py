@@ -36,6 +36,9 @@ def run(questions):
                 reply, valid = answer_question(question, version)
                 results[version].append({"reply": reply, "valid": valid, "error": None})
             except LLMError as error:
+                if number == 1 and version == VERSIONS[0]:
+                    raise SystemExit(f"The first call failed: {error}\n"
+                                     "Fix the key or model name in .env and run again. Nothing was written.")
                 results[version].append({"reply": None, "valid": False, "error": str(error)})
             print(f"Q{number} {version} done")
             time.sleep(PAUSE)
@@ -96,12 +99,12 @@ def write_report(questions, results):
     ]
     lines += [f"| {name} | {a} | {b} |" for name, a, b in summary_rows(results, total)]
     lines += ["", "## Answers side by side",
-              "Fill in the last column after reading both answers.", "",
-              "| # | Question | v1 answer (confidence) | v2 answer (confidence) | Better |",
-              "|---|---|---|---|---|"]
+              "Read both answers, then fill in the Better (v1 or v2) and Why columns.", "",
+              "| # | Question | v1 answer (confidence) | v2 answer (confidence) | Better | Why |",
+              "|---|---|---|---|---|---|"]
     for i, question in enumerate(questions):
         q = question.replace("|", "/")
-        lines.append(f"| {i + 1} | {q} | {cell(results['v1'][i])} | {cell(results['v2'][i])} |  |")
+        lines.append(f"| {i + 1} | {q} | {cell(results['v1'][i])} | {cell(results['v2'][i])} |  |  |")
     lines += ["", "## Full answers"]
     for i, question in enumerate(questions):
         lines += ["", f"### Q{i + 1}. {question}"]
