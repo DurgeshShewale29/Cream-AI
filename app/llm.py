@@ -68,8 +68,9 @@ def post_json(url, headers, payload):
             if status in (401, 403):
                 raise LLMError("The API key was rejected. Check the key in your .env file.")
             if status in (400, 404):
-                raise LLMError(f"The request was refused: {api_message(response)} "
-                               "(if the model was not found, change the model name in .env)")
+                message = api_message(response)
+                hint = " (change the model name in .env)" if "model" in message.lower() else ""
+                raise LLMError(f"The request was refused: {message}{hint}")
             if status == 429 or status >= 500:
                 last_error = f"rate limit or server problem ({status}): {api_message(response)}"
             else:
@@ -80,7 +81,7 @@ def post_json(url, headers, payload):
     raise LLMError(f"Gave up after {RETRIES} tries: {last_error}")
 
 
-def ask_groq(system_prompt, user_message, temperature, max_tokens, json_mode):
+def groq_request(system_prompt, user_message, temperature, max_tokens, json_mode):
     payload = {
         "model": get_model("groq"),
         "messages": [
@@ -98,6 +99,19 @@ def ask_groq(system_prompt, user_message, temperature, max_tokens, json_mode):
         return data["choices"][0]["message"]["content"]
     except (KeyError, IndexError, TypeError):
         raise LLMError("The model reply was not in the expected format.")
+
+
+def ask_groq(system_prompt, user_message, temperature, max_tokens, json_mode):
+    """Groq's JSON mode rejects a reply that is cut off or not valid JSON (some models spend
+    part of the budget on thinking). Then ask once more without JSON mode and a bigger budget;
+    the callers pull the JSON out of the text themselves."""
+    try:
+        return groq_request(system_prompt, user_message, temperature, max_tokens, json_mode)
+    except LLMError as error:
+        if json_mode and "validate json" in str(error).lower():
+            logging.warning("JSON mode failed; asking again without it")
+            return groq_request(system_prompt, user_message, temperature, max_tokens * 2, False)
+        raise
 
 
 def ask_gemini(system_prompt, user_message, temperature, max_tokens, json_mode):

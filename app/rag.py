@@ -85,7 +85,7 @@ def answer_question(question, top_k=TOP_K, chunk_words=RAG_CHUNK_WORDS):
         return dont_know(chunks)
 
     raw = ask_llm(SYSTEM_PROMPT, build_user_message(question, chunks),
-                  temperature=0.0, max_tokens=700, json_mode=True)
+                  temperature=0.0, max_tokens=1500, json_mode=True)
     reply = parse_rag_reply(raw)
     if reply is None:
         logging.warning("The model reply was not valid JSON; answering 'I don't know'")

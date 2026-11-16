@@ -1,0 +1,131 @@
+[
+  {
+    "id": 1,
+    "question": "How much hostel allowance can I get if my parents are small-land farmers?",
+    "answerable": true,
+    "expected_sources": ["https://dte.maharashtra.gov.in/dr-panjabrao-deshmukh-vastigruh-nirvah-bhatta-yojna"],
+    "expected_keywords": ["38,000", "60,000"],
+    "expected_answer": "Rs 38,000 to Rs 60,000, depending on where the student studies (Dr. Panjabrao Deshmukh hostel allowance)"
+  },
+  {
+    "id": 2,
+    "question": "My family income is Rs 6 lakh and I am from an EWS family. Can I get the Rajarshi Chhatrapati Shahu Maharaj scholarship?",
+    "answerable": true,
+    "expected_sources": ["https://dte.maharashtra.gov.in/rajarshi-chhatrapati-shahu-maharaj"],
+    "expected_keywords": ["8 lakh", "8,00,000", "800000"],
+    "expected_answer": "Yes: the scheme covers EWS students with family income up to Rs 8 lakh"
+  },
+  {
+    "id": 3,
+    "question": "I am a girl studying engineering. Which schemes cover my tuition fee?",
+    "answerable": true,
+    "expected_sources": [
+      "https://dte.maharashtra.gov.in/rajarshi-chhatrapati-shahu-maharaj",
+      "https://dte.maharashtra.gov.in/pragati-scholarship-scheme/"
+    ],
+    "expected_keywords": ["Rajarshi", "Pragati"],
+    "expected_answer": "The Rajarshi Chhatrapati Shahu Maharaj scholarship (100% of tuition and exam fee for girls) and the Pragati scholarship for girls"
+  },
+  {
+    "id": 4,
+    "question": "How much money does the Pragati scholarship give a girl student?",
+    "answerable": true,
+    "expected_sources": ["https://dte.maharashtra.gov.in/pragati-scholarship-scheme/"],
+    "expected_keywords": ["50,000"],
+    "expected_answer": "Rs 50,000 per year as a lump sum"
+  },
+  {
+    "id": 5,
+    "question": "What percentage of the tuition and exam fee do girl students get under the Rajarshi Chhatrapati Shahu Maharaj scheme?",
+    "answerable": true,
+    "expected_sources": ["https://dte.maharashtra.gov.in/rajarshi-chhatrapati-shahu-maharaj"],
+    "expected_keywords": ["100%", "100 percent", "100 per cent"],
+    "expected_answer": "100% (boys get 50%)"
+  },
+  {
+    "id": 6,
+    "question": "What is the family income limit for the Rajarshi Chhatrapati Shahu Maharaj scholarship?",
+    "answerable": true,
+    "expected_sources": ["https://dte.maharashtra.gov.in/rajarshi-chhatrapati-shahu-maharaj"],
+    "expected_keywords": ["8 lakh", "8,00,000", "800000"],
+    "expected_answer": "Up to Rs 8 lakh a year"
+  },
+  {
+    "id": 7,
+    "question": "Who can get the Dr. Panjabrao Deshmukh hostel allowance?",
+    "answerable": true,
+    "expected_sources": ["https://dte.maharashtra.gov.in/dr-panjabrao-deshmukh-vastigruh-nirvah-bhatta-yojna"],
+    "expected_keywords": ["EBC", "EWS", "SEBC", "farmer"],
+    "expected_answer": "EBC, EWS and SEBC students whose parents are small-land farmers, registered labourers or EWS"
+  },
+  {
+    "id": 8,
+    "question": "What is the family income limit for the foreign scholarship for higher education abroad?",
+    "answerable": true,
+    "expected_sources": ["https://dte.maharashtra.gov.in/foreign-scholarship-2022/"],
+    "expected_keywords": ["8 lakh", "8,00,000", "800000"],
+    "expected_answer": "Less than Rs 8 lakh a year"
+  },
+  {
+    "id": 9,
+    "question": "What does the foreign scholarship cover?",
+    "answerable": true,
+    "expected_sources": ["https://dte.maharashtra.gov.in/foreign-scholarship-2022/"],
+    "expected_keywords": ["tuition", "insurance", "air travel", "subsistence"],
+    "expected_answer": "Tuition fee, health insurance, subsistence and contingency allowance, and economy-class air travel"
+  },
+  {
+    "id": 10,
+    "question": "Is there an AICTE or NSP scholarship I can apply for?",
+    "answerable": true,
+    "expected_sources": [
+      "https://dte.maharashtra.gov.in/pragati-scholarship-scheme/",
+      "https://scholarships.gov.in/All-Scholarships"
+    ],
+    "expected_keywords": ["Pragati", "Swanath", "Saksham"],
+    "expected_answer": "Yes: the AICTE Pragati (girls), Saksham and Swanath scholarships"
+  },
+  {
+    "id": 11,
+    "question": "Which department runs the AICTE Pragati scholarship on the National Scholarship Portal list?",
+    "answerable": true,
+    "expected_sources": ["https://scholarships.gov.in/All-Scholarships"],
+    "expected_keywords": ["All India Council"],
+    "expected_answer": "All India Council For Technical Education"
+  },
+  {
+    "id": 12,
+    "question": "I belong to a minority community and my family income is Rs 2 lakh. Which scholarship can I apply for?",
+    "answerable": true,
+    "expected_sources": [
+      "https://dte.maharashtra.gov.in/scholarship-for-students-of-minority-communities-pursuing-higher-and-professional-courses",
+      "https://dte.maharashtra.gov.in/merit-cum-means/"
+    ],
+    "expected_keywords": ["Merit-Cum-Means", "Merit Cum Means", "Minority Students"],
+    "expected_answer": "The minority scholarship schemes on the DTE pages, such as Merit-Cum-Means"
+  },
+  {
+    "id": 13,
+    "question": "What is the hostel fee at Sanjivani College of Engineering?",
+    "answerable": false,
+    "expected_sources": [],
+    "expected_keywords": [],
+    "expected_answer": "I don't know (the sources have no college hostel fees)"
+  },
+  {
+    "id": 14,
+    "question": "What is the admission fee for the B.Tech course at Sanjivani College of Engineering?",
+    "answerable": false,
+    "expected_sources": [],
+    "expected_keywords": [],
+    "expected_answer": "I don't know (the sources have no college admission fees)"
+  },
+  {
+    "id": 15,
+    "question": "How much money does the Top Class Education scholarship for SC students give per year?",
+    "answerable": false,
+    "expected_sources": [],
+    "expected_keywords": [],
+    "expected_answer": "I don't know (the NSP list only gives the scheme name and dates, not the amount)"
+  }
+]

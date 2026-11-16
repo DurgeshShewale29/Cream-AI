@@ -1,6 +1,6 @@
 # Semantic search results
 
-Run on 2026-11-14 with `sentence-transformers/all-MiniLM-L6-v2`. 62 chunks from 8 source pages (about 120 words per chunk, 25 words overlap). Every chunk keeps its source, page and title.
+Run on 2026-11-16 with `sentence-transformers/all-MiniLM-L6-v2`. 62 chunks from 8 source pages (about 120 words per chunk, 25 words overlap). Every chunk keeps its source, page and title.
 
 Each question is turned into an embedding and compared with every chunk by cosine similarity. The top 3 hits are listed. A best score below 0.3 is marked "no confident match".
 

@@ -20,6 +20,7 @@ ScholarSetu/
 │   ├── llm.py               # asks Groq or Gemini (keys come from .env)
 │   ├── main.py              # FastAPI service
 │   ├── models.py            # Record dataclass
+│   ├── rag.py               # answers from retrieved chunks, with citations
 │   ├── records.py           # load_records, search, count_by, get_by_id
 │   ├── smart_search.py      # TF-IDF + cosine ranking, powers /search
 │   └── vectorstore.py       # persistent Chroma index, powers /search/semantic
@@ -32,7 +33,10 @@ ScholarSetu/
 ├── docs/
 │   └── how_llms_work.md     # how LLMs work + 10 ScholarSetu questions
 ├── eval/
+│   ├── eval_results.md      # every answer of the two RAG configurations
+│   ├── eval_set.json        # 15 evaluation questions
 │   ├── prompt_compare.md    # v1 vs v2 prompt comparison
+│   ├── run_eval.py          # runs the RAG evaluation
 │   ├── run_prompt_compare.py
 │   └── search_results.md    # top semantic-search hits for the 10 questions
 ├── prompts/
@@ -95,6 +99,23 @@ Each scheme is a dict with: `scheme_name`, `department`, `eligible_category`, `i
 - `app/vectorstore.py` - indexes all chunks into a persistent Chroma collection (`data/chroma/`); the index is built automatically on the first search, or rebuilt with `python -m app.vectorstore`
 - `app/main.py` - new `GET /search/semantic?q=` returns the closest chunks with `score`, `title`, `source`, `page` and `text`
 
+## Day 8
+- `app/rag.py` - retrieves the best chunks for a question, gives them to the model as numbered sources, and returns an answer with `[n]` citations; if the sources do not contain the answer it says "I don't know" (no citation means no answer)
+- `app/main.py` - new `POST /ask` returns `answer`, `answerable`, `confidence` and `citations` (title, source, page, score)
+- `app/chunking.py` and `app/vectorstore.py` - the chunk size is now an option, so two configurations can be compared
+- `eval/eval_set.json` - 15 evaluation questions with expected sources and answers (12 the sources can answer, 3 they cannot, including the hostel-fee question)
+- `eval/run_eval.py` - runs the 15 questions with two configurations (chunk size / top-k) and prints the table below; the details are saved in `eval/eval_results.md`
+
+## RAG evaluation
+15 questions from `eval/eval_set.json` (12 that the sources can answer, 3 that they cannot). Two configurations were run on the same questions with `python eval/run_eval.py`.
+
+| Config | Chunk size | Top-k | Retrieval hit-rate | Answers correct | "I don't know" correct | Overall | Avg time per question |
+|---|---|---|---|---|---|---|---|
+| A | 120 words | 3 | 11/12 | 11/12 | 3/3 | 14/15 | 2.3 s |
+| B | 60 words | 5 | 12/12 | 11/12 | 3/3 | 14/15 | 2.2 s |
+
+**Winner: config B** (chunk size 60 words, top-k 5) with 14/15 correct answers.
+
 ## How to run
 Run all commands from the project root folder.
 
@@ -117,14 +138,16 @@ Run all commands from the project root folder.
     python -m app.embed
     python -m app.vectorstore
 
-### Set up the API key (needed for /chat)
+    python eval/run_eval.py
+
+### Set up the API key (needed for /chat and /ask)
 1. Get a free key from https://console.groq.com/keys (or https://aistudio.google.com/apikey for Gemini).
 2. Copy `.env.example` to `.env` and put your key in it. `.env` is private and is not committed.
 
 ### Run the API
     uvicorn app.main:app --reload
 
-Then open http://127.0.0.1:8000/docs to try every endpoint, including `POST /chat` and `GET /search/semantic`.
+Then open http://127.0.0.1:8000/docs to try every endpoint, including `POST /chat`, `GET /search/semantic` and `POST /ask`.
 
 ### Compare the two prompts
     python eval/run_prompt_compare.py
@@ -133,6 +156,6 @@ Then open http://127.0.0.1:8000/docs to try every endpoint, including `POST /cha
 - The DTE site sometimes returns a 503 error. `fetch.py` retries and skips files it already has; use `python -m app.fetch --force` to download everything again.
 - The NSP page lists scheme names and dates only; scheme details are in guideline PDFs that NSP does not allow scripts to download, so NSP schemes are not in `records.json`. They are in the semantic search as one chunk per scheme (name, department, dates).
 - `data/sample_records.py` is the Day 2 hand-collected list and is not used by `ingest.py`.
-- `/chat` does not use `records.json` yet; the answers come from the model and the system prompt only.
+- `/chat` does not use `records.json` yet; the answers come from the model and the system prompt only. `/ask` answers only from the retrieved chunks.
 - The first run of `python -m app.embed` downloads the embedding model (about 90 MB), so it needs internet.
 - `data/chroma/` is not pushed to GitHub. Run `python -m app.vectorstore` to rebuild it after downloading new pages.
