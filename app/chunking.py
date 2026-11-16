@@ -14,6 +14,11 @@ BLOCK_TAGS = {"p", "li", "h1", "h2", "h3", "h4", "h5", "pre", "div", "section", 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 
+def overlap_for(size):
+    """Overlap for a chunk size: 25 words for the normal size, a smaller one for small chunks."""
+    return OVERLAP_WORDS if size >= CHUNK_WORDS else max(5, size // 4)
+
+
 class BlockText(HTMLParser):
     """Reads a page as blocks of text: one block per paragraph, list item or heading,
     and one block per table row (cells joined with ' | ')."""
@@ -126,7 +131,7 @@ def make_chunk(source, title, index, text):
     }
 
 
-def dte_chunks(html, source):
+def dte_chunks(html, source, size=CHUNK_WORDS, overlap=OVERLAP_WORDS):
     """Chunks of one DTE scheme page: the text under the scheme heading, up to the footer."""
     page = BlockText()
     page.feed(html)
@@ -140,7 +145,7 @@ def dte_chunks(html, source):
         raise ValueError("heading not found in the page text")
     end = next((i for i in range(start + 1, len(page.blocks))
                 if page.blocks[i].startswith(END_MARKERS)), len(page.blocks))
-    pieces = split_blocks(page.blocks[start + 1:end])
+    pieces = split_blocks(page.blocks[start + 1:end], size, overlap)
     if not pieces:
         raise ValueError("no text under the heading")
     title = tidy_name(heading)
@@ -168,8 +173,9 @@ def nsp_chunks(lines, source):
     return chunks
 
 
-def build_chunks(raw_dir=RAW_DIR):
+def build_chunks(raw_dir=RAW_DIR, size=CHUNK_WORDS, overlap=None):
     """Chunks of every downloaded page. Pages that are missing or unreadable are skipped."""
+    overlap = overlap_for(size) if overlap is None else overlap
     chunks = []
     for filename, url in SOURCES.items():
         try:
@@ -179,7 +185,7 @@ def build_chunks(raw_dir=RAW_DIR):
                 page.feed(html)
                 found = nsp_chunks(page.lines, url)
             else:
-                found = dte_chunks(html, url)
+                found = dte_chunks(html, url, size, overlap)
         except FileNotFoundError:
             logging.warning("%s not found - run: python -m app.fetch", filename)
             continue

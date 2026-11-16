@@ -73,6 +73,26 @@ class ChatOut(BaseModel):
     follow_up: str
 
 
+class AskIn(BaseModel):
+    question: str = Field(min_length=3, max_length=500)
+
+
+class Citation(BaseModel):
+    n: int
+    title: str
+    source: str
+    page: int
+    score: float
+
+
+class AskOut(BaseModel):
+    question: str
+    answer: str
+    answerable: bool
+    confidence: Literal["high", "medium", "low"]
+    citations: list[Citation]
+
+
 class QuestionSaved(BaseModel):
     id: int
     question: str
@@ -195,3 +215,25 @@ def chat(body: ChatIn):
     except OSError:
         raise HTTPException(status_code=500, detail="Could not read the prompt files")
     return reply
+
+
+@app.post("/ask", response_model=AskOut)
+def ask(body: AskIn):
+    """Answer from the retrieved chunks, with citations. Says "I don't know" if the sources lack the answer."""
+    try:
+        from app.rag import answer_question as rag_answer  # loaded only when this endpoint is used
+        result = rag_answer(body.question)
+    except ImportError:
+        raise HTTPException(status_code=503,
+                            detail="/ask needs more packages. Run: pip install -r requirements.txt")
+    except LLMError as error:
+        raise HTTPException(status_code=503, detail=str(error))
+    except RuntimeError as error:  # includes EmbeddingError and a missing index
+        raise HTTPException(status_code=503, detail=str(error))
+    return {
+        "question": body.question,
+        "answer": result["answer"],
+        "answerable": result["answerable"],
+        "confidence": result["confidence"],
+        "citations": result["citations"],
+    }
