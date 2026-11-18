@@ -35,7 +35,7 @@ def get_model():
         raise EmbeddingError("sentence-transformers is not installed. Run: pip install -r requirements.txt")
     try:
         return SentenceTransformer(MODEL_NAME)
-    except Exception as error:
+    except (OSError, RuntimeError, ValueError) as error:
         raise EmbeddingError(f"Could not load the embedding model '{MODEL_NAME}' "
                              f"(it needs internet the first time): {error}")
 
@@ -81,13 +81,17 @@ def write_results(questions, results, chunks):
     lines = [
         "# Semantic search results",
         "",
-        f"Run on {date.today().isoformat()} with `{MODEL_NAME}`. {len(chunks)} chunks from "
-        f"{sources} source pages (about {CHUNK_WORDS} words per chunk, {OVERLAP_WORDS} words overlap). "
-        "Every chunk keeps its source, page and title.",
+        (
+            f"Run on {date.today().isoformat()} with `{MODEL_NAME}`. {len(chunks)} chunks from "
+            f"{sources} source pages (about {CHUNK_WORDS} words per chunk, {OVERLAP_WORDS} words overlap). "
+            "Every chunk keeps its source, page and title."
+        ),
         "",
-        "Each question is turned into an embedding and compared with every chunk by cosine "
-        f"similarity. The top {TOP_K} hits are listed. A best score below {MIN_SCORE} is marked "
-        '"no confident match".',
+        (
+            "Each question is turned into an embedding and compared with every chunk by cosine "
+            f"similarity. The top {TOP_K} hits are listed. A best score below {MIN_SCORE} is marked "
+            '"no confident match".'
+        ),
         "",
         "## Summary",
         "| # | Question | Best hit | Score | Result |",

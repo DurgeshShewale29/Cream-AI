@@ -8,7 +8,7 @@ from app.fetch import RAW_DIR, SOURCES
 OUT_JSON = RAW_DIR.parent / "records.json"
 NSP_FILE = "nsp_all_scholarships.html"
 DTE_DEPARTMENT = "Directorate of Technical Education, Maharashtra"
-STATUS_LINE = re.compile(r"^Scheme (Open|Closed|Yet)", re.I)
+STATUS_LINE = re.compile(r"^Scheme (Open|Closed|Yet)", re.IGNORECASE)
 END_MARKERS = ("Procedure", "The method", "Sitemap", "Visitor Counter", "Terms And Conditions",
                "Last Updated On")
 BENEFIT_WORDS = r"scholarship|allowance|fee|waiver|reimburs|assistance|stipend|tuition"
@@ -27,6 +27,7 @@ CATEGORY_PATTERNS = [
 ]
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 
 class PageText(HTMLParser):
@@ -115,22 +116,22 @@ def page_content(lines, heading):
 def find_category(content):
     """Who the scheme is for, from the first paragraph of the page."""
     intro = next((line for line in content if len(line) >= 60), content[0] if content else "")
-    intro = re.sub(r"boys?\s*(?:and|or|&)\s*girls?", "students", intro, flags=re.I)
-    labels = [label for label, pattern in CATEGORY_PATTERNS if re.search(pattern, intro, re.I)]
+    intro = re.sub(r"boys?\s*(?:and|or|&)\s*girls?", "students", intro, flags=re.IGNORECASE)
+    labels = [label for label, pattern in CATEGORY_PATTERNS if re.search(pattern, intro, re.IGNORECASE)]
     return " / ".join(labels) if labels else first_sentence(intro)
 
 
 def find_income(text):
     """Highest annual family income limit mentioned, in rupees (None if not stated)."""
-    values = [float(x) * 100000 for x in re.findall(r"(\d+(?:\.\d+)?)\s*lakhs?", text, re.I)]
+    values = [float(x) * 100000 for x in re.findall(r"(\d+(?:\.\d+)?)\s*lakhs?", text, re.IGNORECASE)]
     values += [int(x.replace(",", ""))
-               for x in re.findall(r"income[^.]{0,120}?(?:Rs\.?|₹)\s*([\d,]{6,})", text, re.I)]
+               for x in re.findall(r"income[^.]{0,120}?(?:Rs\.?|₹)\s*([\d,]{6,})", text, re.IGNORECASE)]
     return int(max(values)) if values else None
 
 
 BENEFIT_HEADER = r"amount|fee|allowance|benefit"
 HEADING = re.compile(r"^\W*(benefits?( to (the )?students)?|scholarship amount|amount of (the )?"
-                     r"(scholarship|benefit)|rate of scholarship)\W*$", re.I)
+                     r"(scholarship|benefit)|rate of scholarship)\W*$", re.IGNORECASE)
 
 
 def clean_money(text):
@@ -142,7 +143,7 @@ def clean_money(text):
 def table_benefit(rows):
     """A table with a header like 'Academic fees' or 'Lump sum Amount' -> one line per row."""
     for i, header in enumerate(rows):
-        if len(header) < 3 or not any(re.search(BENEFIT_HEADER, c, re.I) for c in header):
+        if len(header) < 3 or not any(re.search(BENEFIT_HEADER, c, re.IGNORECASE) for c in header):
             continue
         data = []
         for row in rows[i + 1:]:
@@ -152,7 +153,7 @@ def table_benefit(rows):
         if not data:
             continue
         value_cols = [j for j, h in enumerate(header)
-                      if re.search(BENEFIT_HEADER, h, re.I)
+                      if re.search(BENEFIT_HEADER, h, re.IGNORECASE)
                       and all(re.search(r"\d", row[j]) for row in data)]
         if not value_cols:
             continue
@@ -173,7 +174,7 @@ def total_row_benefit(rows):
     """A row such as 'Total amount | 60,000/- | 51,000/-' (rupees only, not seat counts)."""
     for row in rows:
         for i, cell in enumerate(row):
-            if not re.match(r"total", cell, re.I):
+            if not re.match(r"total", cell, re.IGNORECASE):
                 continue
             rest = row[i + 1:]
             if not any(re.search(r"/-|,|Rs|₹|रु", c) for c in rest):
@@ -193,7 +194,7 @@ def heading_benefit(lines):
             continue
         picked = []
         for nxt in lines[i + 1:]:
-            if re.match(r"(helpline|eligibility|procedure|how to)", nxt, re.I) or HEADING.match(nxt):
+            if re.match(r"(helpline|eligibility|procedure|how to)", nxt, re.IGNORECASE) or HEADING.match(nxt):
                 break
             if len(nxt) > 3:
                 picked.append(nxt.strip(" •-–"))
@@ -223,11 +224,11 @@ def find_benefit(rows, content):
     text = re.sub(r"\bRs\.\s*", "Rs ", text)  # so "Rs. 50,000" is not cut in two
     sentences = [s.strip() for s in re.split(r"(?<=[.;])\s+|•", text) if s.strip()]
     for sentence in sentences:  # an amount or percentage next to a benefit word
-        if (re.search(r"Rs\s*[\d,]+|\d+\s*%|per (annum|year|month)", sentence, re.I)
-                and re.search(BENEFIT_WORDS, sentence, re.I)):
+        if (re.search(r"Rs\s*[\d,]+|\d+\s*%|per (annum|year|month)", sentence, re.IGNORECASE)
+                and re.search(BENEFIT_WORDS, sentence, re.IGNORECASE)):
             return sentence[:220]
     for sentence in sentences[1:]:  # first sentence about the benefit after the intro
-        if re.search(BENEFIT_WORDS, sentence, re.I):
+        if re.search(BENEFIT_WORDS, sentence, re.IGNORECASE):
             return sentence[:220]
     return None
 
@@ -256,7 +257,7 @@ def make_record(scheme_name, eligible_category, income_limit, benefit, source_ur
 def parse_dte(page, url):
     """One DTE scheme page -> one record."""
     name = next((h for h in page.h3
-                 if re.search(r"scheme|scholarship|yojna|allowance", h, re.I)), None)
+                 if re.search(r"scheme|scholarship|yojna|allowance", h, re.IGNORECASE)), None)
     if not name:
         raise ValueError("no scheme heading found")
     content = page_content(page.lines, name)
@@ -282,25 +283,25 @@ def ingest(raw_dir=RAW_DIR, out_path=OUT_JSON):
         try:
             html = (raw_dir / filename).read_text(encoding="utf-8", errors="ignore")
         except FileNotFoundError:
-            logging.warning("%s not found - run: python -m app.fetch", filename)
+            logger.warning("%s not found - run: python -m app.fetch", filename)
             continue
         page = PageText()
         try:
             page.feed(html)
             if filename == NSP_FILE:
-                logging.info("%s: %s schemes listed. Skipped: the list has only names and "
-                             "dates; benefits are in guideline PDFs that NSP does not allow "
-                             "scripts to download", filename, count_nsp_schemes(page.lines))
+                logger.info("%s: %s schemes listed. Skipped: the list has only names and "
+                            "dates; benefits are in guideline PDFs that NSP does not allow "
+                            "scripts to download", filename, count_nsp_schemes(page.lines))
                 continue
             record = parse_dte(page, url)
         except ValueError as error:  # incomplete page: skip it
-            logging.warning("%s skipped: %s", filename, error)
+            logger.warning("%s skipped: %s", filename, error)
             continue
-        except Exception as error:  # broken file: log it and carry on
-            logging.warning("Could not parse %s: %s", filename, error)
+        except (OSError, RuntimeError, LookupError, TypeError) as error:  # broken file: log it and carry on
+            logger.warning("Could not parse %s: %s", filename, error)
             continue
         if record["income_limit"] is None:
-            logging.warning("%s: no income limit stated on the page", filename)
+            logger.warning("%s: no income limit stated on the page", filename)
         records.append(record)
 
     for number, record in enumerate(records, start=1):
@@ -308,7 +309,7 @@ def ingest(raw_dir=RAW_DIR, out_path=OUT_JSON):
 
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(records, f, indent=2, ensure_ascii=False)
-    logging.info("Saved %s records to %s", len(records), out_path)
+    logger.info("Saved %s records to %s", len(records), out_path)
     return records
 
 

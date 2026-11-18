@@ -8,3 +8,5 @@ data/raw/
 data/questions.json
 data/feedback.json
 data/chroma/
+.pytest_cache/
+.ruff_cache/

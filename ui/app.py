@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 import requests
@@ -17,23 +18,27 @@ import streamlit as st
 UI_DIR = Path(__file__).resolve().parent
 ROOT_DIR = UI_DIR.parent
 
-sys.path = [p for p in sys.path if Path(p or ".").resolve() != UI_DIR]
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-if "app" in sys.modules and getattr(sys.modules["app"], "__file__", "") == str(Path(__file__).resolve()):
-    del sys.modules["app"]
-
-from app.records import load_records  # noqa: E402
-from app.stacking import (  # noqa: E402
-    ALL_CATEGORIES,
-    analyze_stacking,
-    detect_mentioned_records,
-    filter_eligible_records,
-)
-
 API_URL = os.getenv("SCHOLARSETU_API_URL", "http://127.0.0.1:8000")
 FEEDBACK_JSON = ROOT_DIR / "data" / "feedback.json"
 API_TIMEOUT = 120
+logger = logging.getLogger(__name__)
+
+
+def _load_app_modules():
+    """Import app.* safely even when Streamlit puts ui/ ahead of the project root."""
+    sys.path = [p for p in sys.path if Path(p or ".").resolve() != UI_DIR]
+    if str(ROOT_DIR) not in sys.path:
+        sys.path.insert(0, str(ROOT_DIR))
+    if "app" in sys.modules and getattr(sys.modules["app"], "__file__", "") == str(Path(__file__).resolve()):
+        del sys.modules["app"]
+    from app.records import load_records
+    from app.stacking import (
+        ALL_CATEGORIES,
+        analyze_stacking,
+        detect_mentioned_records,
+        filter_eligible_records,
+    )
+    return load_records, ALL_CATEGORIES, analyze_stacking, detect_mentioned_records, filter_eligible_records
 
 SAMPLE_QUESTIONS = [
     ("Rajarshi EWS Rs 6L check", "My family income is Rs 6 lakh and I am from an EWS family. Can I get the Rajarshi Chhatrapati Shahu Maharaj scholarship?"),
@@ -44,7 +49,7 @@ SAMPLE_QUESTIONS = [
 ]
 
 
-def format_rupees(amount: Optional[int]) -> str:
+def format_rupees(amount: int | None) -> str:
     if amount is None:
         return "Not stated"
     return f"Rs {int(amount):,}"
@@ -88,7 +93,7 @@ def check_api_health(api_url: str) -> tuple[bool, str]:
         resp.raise_for_status()
         data = resp.json()
         return True, f"Online ({data.get('records', 0)} schemes)"
-    except Exception as error:
+    except (requests.RequestException, ValueError) as error:
         return False, f"Offline ({error.__class__.__name__})"
 
 
@@ -106,9 +111,9 @@ def call_ask(api_url: str, question: str) -> dict:
 
 def call_agent(
     api_url: str,
-    question: Optional[str] = None,
-    thread_id: Optional[str] = None,
-    approve: Optional[bool] = None,
+    question: str | None = None,
+    thread_id: str | None = None,
+    approve: bool | None = None,
 ) -> dict:
     payload: dict[str, Any] = {}
     if question is not None:
@@ -131,7 +136,7 @@ def call_agent(
 def _extract_error(resp: requests.Response) -> str:
     try:
         return str(resp.json().get("detail", resp.text[:200]))
-    except Exception:
+    except (ValueError, TypeError, AttributeError):
         return resp.text[:200]
 
 
@@ -144,7 +149,7 @@ def save_feedback_local(entry: dict) -> dict:
     saved = {
         "id": len(items) + 1,
         **entry,
-        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
     }
     items.append(saved)
     FEEDBACK_JSON.parent.mkdir(parents=True, exist_ok=True)
@@ -158,8 +163,8 @@ def submit_feedback(api_url: str, payload: dict) -> dict:
         resp = requests.post(f"{api_url.rstrip('/')}/feedback", json=payload, timeout=5)
         if resp.status_code in (200, 201):
             return resp.json()
-    except Exception:
-        pass
+    except (requests.RequestException, ValueError) as error:
+        logger.warning("Feedback API unavailable, saving locally: %s", error)
     return save_feedback_local(payload)
 
 
@@ -294,6 +299,7 @@ def init_state() -> None:
 
 
 def handle_question(question: str, api_url: str, mode: str, records: list[dict]) -> None:
+    _, _, _, detect_mentioned_records, _ = _load_app_modules()
     question = question.strip()
     if len(question) < 3:
         st.warning("Please enter at least 3 characters.")
@@ -346,7 +352,7 @@ def handle_question(question: str, api_url: str, mode: str, records: list[dict])
                 "thread_id": data.get("thread_id"),
                 "matched_ids": [r["id"] for r in matched],
             })
-    except Exception as error:
+    except (requests.RequestException, RuntimeError, ValueError) as error:
         st.session_state.messages.append({
             "role": "assistant",
             "endpoint": mode,
@@ -364,6 +370,7 @@ def handle_question(question: str, api_url: str, mode: str, records: list[dict])
 
 
 def handle_approval(msg_index: int, approve: bool, api_url: str, records: list[dict]) -> None:
+    _, _, _, detect_mentioned_records, _ = _load_app_modules()
     msg = st.session_state.messages[msg_index]
     try:
         data = call_agent(api_url, thread_id=msg["thread_id"], approve=approve)
@@ -383,7 +390,7 @@ def handle_approval(msg_index: int, approve: bool, api_url: str, records: list[d
             "pending_action": data.get("pending_action"),
             "matched_ids": [r["id"] for r in matched],
         })
-    except Exception as error:
+    except (requests.RequestException, RuntimeError, ValueError) as error:
         msg["status"] = "error"
         msg["content"] = f"Approval error: {error}"
 
@@ -395,6 +402,7 @@ def main() -> None:
         layout="wide",
     )
     init_state()
+    load_records, ALL_CATEGORIES, analyze_stacking, _, filter_eligible_records = _load_app_modules()
     records = load_records()
     records_by_id = {r["id"]: r for r in records}
     api_url = API_URL

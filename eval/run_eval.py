@@ -6,8 +6,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app import rag, vectorstore  # noqa: E402
-from app.llm import LLMError  # noqa: E402
+from app import rag, vectorstore
+from app.llm import LLMError
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 EVAL_SET = BASE_DIR / "eval" / "eval_set.json"
@@ -92,9 +92,11 @@ def readme_section(summaries):
     winner = pick_winner(summaries)
     lines = [
         "## RAG evaluation",
-        f"{first['total']} questions from `eval/eval_set.json` ({first['answerable_n']} that the sources "
-        f"can answer, {first['unanswerable_n']} that they cannot). Two configurations were run on the "
-        "same questions with `python eval/run_eval.py`.",
+        (
+            f"{first['total']} questions from `eval/eval_set.json` ({first['answerable_n']} that the sources "
+            f"can answer, {first['unanswerable_n']} that they cannot). Two configurations were run on the "
+            "same questions with `python eval/run_eval.py`."
+        ),
         "",
         "| Config | Chunk size | Top-k | Retrieval hit-rate | Answers correct | \"I don't know\" correct | Overall | Avg time per question |",
         "|---|---|---|---|---|---|---|---|",
@@ -106,8 +108,13 @@ def readme_section(summaries):
                      f"{s['idk']}/{s['unanswerable_n']} | {s['overall']}/{s['total']} | "
                      f"{s['avg_seconds']:.1f} s |")
     c = winner["config"]
-    lines += ["", f"**Winner: config {c['name']}** (chunk size {c['chunk_words']} words, top-k {c['top_k']}) "
-                  f"with {winner['overall']}/{winner['total']} correct answers."]
+    lines += [
+        "",
+        (
+            f"**Winner: config {c['name']}** (chunk size {c['chunk_words']} words, top-k {c['top_k']}) "
+            f"with {winner['overall']}/{winner['total']} correct answers."
+        ),
+    ]
     return "\n".join(lines)
 
 

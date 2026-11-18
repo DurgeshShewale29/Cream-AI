@@ -8,8 +8,6 @@ add-on that can be combined with an eligible domestic MahaDBT fee scholarship.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from app.records import load_records
 
 # Known DTE Maharashtra / NSP scheme rules keyed by a stable substring of source_url.
@@ -120,7 +118,7 @@ def estimate_annual_value(
     if key == "rajarshi-chhatrapati-shahu-maharaj":
         if gender == "Female":
             return int(annual_fee), "100% of tuition & exam fees (Female)"
-        return int(round(annual_fee * 0.5)), "50% of tuition & exam fees (Male)"
+        return round(annual_fee * 0.5), "50% of tuition & exam fees (Male)"
     if key == "dr-panjabrao-deshmukh-vastigruh-nirvah-bhatta-yojna":
         if city_tier == "metro":
             return 60_000, "Rs 60,000/yr metro city (Mumbai/Pune/Thane/Nagpur); Rs 38,000-51,000 elsewhere"
@@ -146,7 +144,7 @@ def filter_eligible_records(
     records: list[dict],
     category: str = "EWS",
     gender: str = "Female",
-    family_income: Optional[int] = 400_000,
+    family_income: int | None = 400_000,
     has_disability: bool = False,
     is_hosteller: bool = True,
     include_abroad: bool = False,
@@ -174,9 +172,9 @@ def filter_eligible_records(
 
 def detect_mentioned_records(
     answer: str = "",
-    citations: Optional[list[dict]] = None,
-    steps: Optional[list[dict]] = None,
-    records: Optional[list[dict]] = None,
+    citations: list[dict] | None = None,
+    steps: list[dict] | None = None,
+    records: list[dict] | None = None,
 ) -> list[dict]:
     """Identify schemes from records.json referenced in a /ask or /agent response."""
     records = records if records is not None else load_records()

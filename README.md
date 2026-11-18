@@ -10,50 +10,56 @@
 ```
 ScholarSetu/
 ├── analysis/
-│   └── explore.py           # prints 3 facts about the records (pandas)
+│   └── explore.py                   # prints 3 facts about the records (pandas)
 ├── app/
-│   ├── agent_loop.py        # hand-written agent: reason, act, observe
-│   ├── chunking.py          # cuts the downloaded pages into chunks (source, page, title)
-│   ├── cli.py               # menu program that uses records.py
-│   ├── embed.py             # embeddings + semantic search over the chunks
-│   ├── fetch.py             # downloads source pages into data/raw/
-│   ├── graph.py             # the agent rebuilt in LangGraph (memory + approval)
-│   ├── ingest.py            # cleans downloaded pages into data/records.json
-│   ├── llm.py               # asks Groq or Gemini (keys come from .env)
-│   ├── main.py              # FastAPI service
-│   ├── models.py            # Record dataclass
-│   ├── rag.py               # answers from retrieved chunks, with citations
-│   ├── records.py           # load_records, search, count_by, get_by_id
-│   ├── smart_search.py      # TF-IDF + cosine ranking, powers /search
-│   ├── stacking.py          # MahaDBT/NSP stacking rules & highest-value preference order
-│   ├── tools.py             # compare_schemes tool
-│   └── vectorstore.py       # persistent Chroma index, powers /search/semantic
+│   ├── agent_loop.py                # hand-written agent: reason, act, observe
+│   ├── chunking.py                  # cuts the downloaded pages into chunks (source, page, title)
+│   ├── cli.py                       # menu program that uses records.py
+│   ├── embed.py                     # embeddings + semantic search over the chunks
+│   ├── fetch.py                     # downloads source pages into data/raw/
+│   ├── graph.py                     # the agent rebuilt in LangGraph (memory + approval)
+│   ├── ingest.py                    # cleans downloaded pages into data/records.json
+│   ├── llm.py                       # asks Groq or Gemini (keys come from .env)
+│   ├── main.py                      # FastAPI service
+│   ├── models.py                    # Record dataclass
+│   ├── rag.py                       # answers from retrieved chunks, with citations
+│   ├── records.py                   # load_records, search, count_by, get_by_id
+│   ├── smart_search.py              # TF-IDF + cosine ranking, powers /search
+│   ├── stacking.py                  # MahaDBT/NSP stacking rules & highest-value preference order
+│   ├── tools.py                     # compare_schemes tool
+│   └── vectorstore.py               # persistent Chroma index, powers /search/semantic
 ├── data/
-│   ├── chroma/              # Chroma index (not pushed to GitHub)
-│   ├── raw/                 # downloaded pages (not pushed to GitHub)
-│   ├── feedback.json        # saved by POST /feedback (not pushed to GitHub)
-│   ├── questions.json       # saved by POST /questions (not pushed to GitHub)
-│   ├── records.json         # clean records created by ingest.py
-│   └── sample_records.py    # 20 hand-collected schemes
+│   ├── chroma/                      # Chroma index (not pushed to GitHub)
+│   ├── raw/                         # downloaded pages (not pushed to GitHub)
+│   ├── feedback.json                # saved by POST /feedback (not pushed to GitHub)
+│   ├── questions.json               # saved by POST /questions (not pushed to GitHub)
+│   ├── records.json                 # clean records created by ingest.py
+│   └── sample_records.py            # 20 hand-collected schemes
 ├── docs/
-│   ├── how_llms_work.md     # how LLMs work + 10 ScholarSetu questions
-│   └── ui_screenshot.png    # Streamlit UI screenshot
+│   ├── how_llms_work.md             # how LLMs work + 10 ScholarSetu questions
+│   └── ui_screenshot.png            # Streamlit UI screenshot
 ├── eval/
-│   ├── eval_results.md      # every answer of the two RAG configurations
-│   ├── eval_set.json        # 15 evaluation questions
-│   ├── prompt_compare.md    # v1 vs v2 prompt comparison
-│   ├── run_eval.py          # runs the RAG evaluation
+│   ├── eval_results.md              # every answer of the two RAG configurations
+│   ├── eval_set.json                # 15 evaluation questions
+│   ├── prompt_compare.md            # v1 vs v2 prompt comparison
+│   ├── run_eval.py                  # runs the RAG evaluation
 │   ├── run_prompt_compare.py
-│   └── search_results.md    # top semantic-search hits for the 10 questions
+│   └── search_results.md            # top semantic-search hits for the 10 questions
 ├── prompts/
-│   ├── system.txt           # ScholarSetu system prompt
-│   ├── task_v1.txt          # task prompt, version 1
-│   └── task_v2.txt          # task prompt, version 2
+│   ├── system.txt                   # ScholarSetu system prompt
+│   ├── task_v1.txt                  # task prompt, version 1
+│   └── task_v2.txt                  # task prompt, version 2
 ├── tests/
-│   └── test_day10.py        # automated tests for stacking, feedback, RAG Q6 refusal, agent approval & UI
+│   ├── test_agent_tool.py           # pytest tests for compare_schemes, agent_loop & approval rejection
+│   ├── test_api_and_rag.py          # pytest tests for /health & /ask with a fake LLM
+│   ├── test_day10.py                # stacking, feedback, RAG Q6 refusal, approval & Streamlit AppTest
+│   └── test_records_and_search.py   # pytest tests for records, TF-IDF search & /records + /search
 ├── ui/
-│   └── app.py               # Streamlit chat UI with citations, feedback & stacking warning
-├── .env.example             # copy to .env and add your key (.env is private)
+│   └── app.py                       # Streamlit chat UI with citations, feedback & stacking warning
+├── .dockerignore
+├── .env.example                     # copy to .env and add your key (.env is private)
+├── Dockerfile
+├── docker-compose.yml
 ├── day01_intro.py
 ├── day01_menu.py
 ├── day02_search.py
@@ -145,6 +151,11 @@ Each scheme is a dict with: `scheme_name`, `department`, `eligible_category`, `i
 ### Streamlit UI Screenshot
 ![ScholarSetu Streamlit UI](docs/ui_screenshot.png)
 
+## Day 11
+- `tests/` - full `pytest` suite covering records & TF-IDF search (`tests/test_records_and_search.py`), `/health` and `/ask` with a fake LLM including citation enforcement and Q6 refusal (`tests/test_api_and_rag.py`), `compare_schemes`, `agent_loop` and LangGraph approval/rejection (`tests/test_agent_tool.py`), plus stacking rules, feedback and Streamlit `AppTest` (`tests/test_day10.py`).
+- `ruff check .` - passes across the full repository with zero errors.
+- `Dockerfile`, `.dockerignore` and `docker-compose.yml` - containerizes both the FastAPI API (`api`) and Streamlit UI (`ui`) with a non-root user, persistent `./data` volume, API healthcheck and automatic service wiring (`SCHOLARSETU_API_URL=http://api:8000`).
+
 ## How to run
 Run all commands from the project root folder.
 
@@ -172,7 +183,8 @@ Run all commands from the project root folder.
     python -m app.tools "Rajarshi" "Pragati"
     python -m app.agent_loop "Compare Rajarshi and Pragati"
 
-    python -m unittest discover -s tests -v
+    pytest -v
+    ruff check .
 
 ### Set up the API key (needed for /chat, /ask and /agent)
 1. Get a free key from https://console.groq.com/keys (or https://aistudio.google.com/apikey for Gemini).
@@ -189,6 +201,22 @@ Keep the FastAPI server running in one terminal, then start Streamlit in a secon
     streamlit run ui/app.py
 
 Open http://localhost:8501 to chat with ScholarSetu, view citations, save thumbs up/down feedback, and check MahaDBT stacking warnings and preference order.
+
+## Run with Docker
+1. Copy `.env.example` to `.env` and add your `GROQ_API_KEY` (or `GEMINI_API_KEY`).
+2. Start both the FastAPI backend and Streamlit UI together:
+
+    docker compose up --build
+
+3. Open the services in your browser:
+   - **Streamlit UI:** http://localhost:8501
+   - **FastAPI Docs:** http://localhost:8000/docs
+   - **Health Check:** http://localhost:8000/health
+4. Stop the containers when finished:
+
+    docker compose down
+
+*(The `./data` folder is mounted into both containers so downloaded pages, the Chroma index, saved questions and feedback persist across restarts.)*
 
 ### Try the agent with approval
 1. `POST /agent` with `{"question": "Compare Rajarshi and Pragati"}`. The reply has `status: awaiting_approval`, the `pending_action` and a `thread_id`.

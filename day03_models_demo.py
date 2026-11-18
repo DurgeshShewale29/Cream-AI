@@ -1,4 +1,4 @@
-from app.records import load_records, load_record_objects
+from app.records import load_record_objects, load_records
 
 dicts = load_records()
 objects = load_record_objects()

@@ -6,6 +6,8 @@ from app.chunking import CHUNK_WORDS
 from app.llm import ask_llm
 from app.vectorstore import search
 
+logger = logging.getLogger(__name__)
+
 TOP_K = 3                    # how many chunks are given to the model
 RAG_CHUNK_WORDS = CHUNK_WORDS  # chunk size used by /ask (change TOP_K and this to the evaluation winner)
 MIN_RETRIEVAL_SCORE = 0.15   # below this the question is clearly unrelated: skip the model
@@ -63,7 +65,7 @@ def parse_rag_reply(raw):
 def says_idk(text):
     """True if the answer text itself says it does not know."""
     return bool(re.match(r"\W*(i\s+(do\s+not|don['’]t)\s+know|i\s+(could\s+not|cannot|can['’]t)\s+find)",
-                         text, re.I))
+                         text, re.IGNORECASE))
 
 
 def summarise(chunks):
@@ -88,7 +90,7 @@ def answer_question(question, top_k=TOP_K, chunk_words=RAG_CHUNK_WORDS):
                   temperature=0.0, max_tokens=1500, json_mode=True)
     reply = parse_rag_reply(raw)
     if reply is None:
-        logging.warning("The model reply was not valid JSON; answering 'I don't know'")
+        logger.warning("The model reply was not valid JSON; answering 'I don't know'")
         return dont_know(chunks)
     if not reply["answerable"] or not reply["answer"] or says_idk(reply["answer"]):
         return dont_know(chunks)

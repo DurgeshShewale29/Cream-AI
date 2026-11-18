@@ -1,6 +1,5 @@
 import uuid
 from functools import lru_cache
-from typing import Optional
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
@@ -30,7 +29,7 @@ class AgentState(TypedDict, total=False):
     question: str
     history: list             # earlier turns: [{"question": ..., "answer": ...}]
     scratch: list             # this turn's steps: [{"action", "input", "observation"}]
-    pending: Optional[dict]   # the tool call the model chose, not yet run
+    pending: dict | None   # the tool call the model chose, not yet run
     approved: bool
     answer: str
     steps: int

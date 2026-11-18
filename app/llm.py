@@ -6,6 +6,7 @@ import requests
 from dotenv import load_dotenv
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 TIMEOUT = 30
 RETRIES = 3
@@ -44,7 +45,7 @@ def api_message(response):
     """The error text the provider sent back."""
     try:
         return response.json()["error"]["message"]
-    except Exception:
+    except (ValueError, KeyError, TypeError):
         return response.text[:200]
 
 
@@ -75,7 +76,7 @@ def post_json(url, headers, payload):
                 last_error = f"rate limit or server problem ({status}): {api_message(response)}"
             else:
                 raise LLMError(f"Unexpected error {status}: {api_message(response)}")
-        logging.warning("LLM call failed (try %s of %s): %s", attempt, RETRIES, last_error)
+        logger.warning("LLM call failed (try %s of %s): %s", attempt, RETRIES, last_error)
         if attempt < RETRIES:
             time.sleep(2 * attempt)  # wait longer after each failure
     raise LLMError(f"Gave up after {RETRIES} tries: {last_error}")
@@ -109,7 +110,7 @@ def ask_groq(system_prompt, user_message, temperature, max_tokens, json_mode):
         return groq_request(system_prompt, user_message, temperature, max_tokens, json_mode)
     except LLMError as error:
         if json_mode and "validate json" in str(error).lower():
-            logging.warning("JSON mode failed; asking again without it")
+            logger.warning("JSON mode failed; asking again without it")
             return groq_request(system_prompt, user_message, temperature, max_tokens * 2, False)
         raise
 

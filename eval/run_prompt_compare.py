@@ -6,8 +6,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app.llm import LLMError, get_model, get_provider  # noqa: E402
-from app.main import answer_question  # noqa: E402
+from app.llm import LLMError, get_model, get_provider
+from app.main import answer_question
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 QUESTIONS_FILE = BASE_DIR / "docs" / "how_llms_work.md"
@@ -84,14 +84,18 @@ def write_report(questions, results):
     lines = [
         "# Prompt comparison: v1 vs v2",
         "",
-        f"Run on {date.today().isoformat()} with {get_provider()} / {get_model(get_provider())}, "
-        f"on the {total} ScholarSetu questions from `docs/how_llms_work.md`.",
+        (
+            f"Run on {date.today().isoformat()} with {get_provider()} / {get_model(get_provider())}, "
+            f"on the {total} ScholarSetu questions from `docs/how_llms_work.md`."
+        ),
         "",
         "## The two prompt versions",
         "- **v1** (`prompts/task_v1.txt`): a short prompt that only asks for the answer in JSON.",
-        "- **v2** (`prompts/task_v2.txt`): a step by step prompt. It tells the model to note the student's "
-        "details, name only schemes it is sure of, never guess amounts or dates, say so when a question is "
-        "not about scholarships, and use a fixed rule for the confidence value.",
+        (
+            "- **v2** (`prompts/task_v2.txt`): a step by step prompt. It tells the model to note the student's "
+            "details, name only schemes it is sure of, never guess amounts or dates, say so when a question is "
+            "not about scholarships, and use a fixed rule for the confidence value."
+        ),
         "",
         "## Numbers counted by the script",
         "| Measure | v1 | v2 |",
@@ -118,9 +122,15 @@ def write_report(questions, results):
                 lines.append(f"- **{version}** (confidence: {reply['confidence']}): {answer}")
                 if reply["follow_up"]:
                     lines.append(f"  - follow-up: {reply['follow_up']}")
-    lines += ["", "## My conclusion",
-              "_Write 3 or 4 sentences here after reading the answers: which version is better, "
-              "and what did you notice for Q6 (the question the data cannot answer)?_", ""]
+    lines += [
+        "",
+        "## My conclusion",
+        (
+            "_Write 3 or 4 sentences here after reading the answers: which version is better, "
+            "and what did you notice for Q6 (the question the data cannot answer)?_"
+        ),
+        "",
+    ]
     OUT_FILE.write_text("\n".join(lines), encoding="utf-8")
 
 

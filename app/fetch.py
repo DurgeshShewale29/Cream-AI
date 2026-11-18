@@ -30,6 +30,7 @@ SOURCES = {
 HEADERS = {"User-Agent": "ScholarSetu-student-project/0.1 (learning project)"}
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 
 def download(url, filename, timeout=15, retries=3):
@@ -40,12 +41,12 @@ def download(url, filename, timeout=15, retries=3):
             response = requests.get(url, headers=HEADERS, timeout=timeout)
             response.raise_for_status()
         except requests.exceptions.Timeout:
-            logging.warning("Timed out (try %s of %s): %s", attempt, retries, url)
+            logger.warning("Timed out (try %s of %s): %s", attempt, retries, url)
         except requests.exceptions.RequestException as error:
-            logging.warning("Failed (try %s of %s): %s (%s)", attempt, retries, url, error)
+            logger.warning("Failed (try %s of %s): %s (%s)", attempt, retries, url, error)
         else:
             (RAW_DIR / filename).write_bytes(response.content)
-            logging.info("Saved %s (%s bytes)", filename, len(response.content))
+            logger.info("Saved %s (%s bytes)", filename, len(response.content))
             return True
         time.sleep(2 * attempt)  # wait longer after each failure
     return False
@@ -55,13 +56,13 @@ def fetch_all(force=False):
     ok = 0
     for filename, url in SOURCES.items():
         if (RAW_DIR / filename).exists() and not force:
-            logging.info("Already have %s (use --force to download again)", filename)
+            logger.info("Already have %s (use --force to download again)", filename)
             ok += 1
             continue
         if download(url, filename):
             ok += 1
         time.sleep(2)  # be polite: pause between requests
-    logging.info("Have %s of %s files", ok, len(SOURCES))
+    logger.info("Have %s of %s files", ok, len(SOURCES))
     return ok
 
 

@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -8,7 +7,7 @@ class Record:
     scheme_name: str
     department: str
     eligible_category: str
-    income_limit: Optional[int]
+    income_limit: int | None
     benefit: str
     source_url: str
     verified: bool = False

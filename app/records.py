@@ -5,6 +5,7 @@ from pathlib import Path
 from app.models import Record
 
 RECORDS_JSON = Path(__file__).resolve().parent.parent / "data" / "records.json"
+logger = logging.getLogger(__name__)
 
 
 def load_records():
@@ -13,7 +14,7 @@ def load_records():
         with open(RECORDS_JSON, encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
-        logging.error("records.json not found. Run: python -m app.fetch, then python -m app.ingest")
+        logger.error("records.json not found. Run: python -m app.fetch, then python -m app.ingest")
         return []
 
 

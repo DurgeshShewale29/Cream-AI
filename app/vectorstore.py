@@ -9,6 +9,7 @@ from app.embed import chunk_to_embed_text, embed_texts
 
 CHROMA_DIR = Path(__file__).resolve().parent.parent / "data" / "chroma"
 COLLECTION = "scholarsetu_chunks"
+logger = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
@@ -30,8 +31,8 @@ def build_index(chunk_words=CHUNK_WORDS):
     name = collection_name(chunk_words)
     try:
         client.delete_collection(name)  # start clean so old chunks never linger
-    except Exception:
-        logging.info("No old collection to delete")
+    except (chromadb.errors.ChromaError, ValueError):
+        logger.info("No old collection to delete")
     collection = client.create_collection(name, metadata={"hnsw:space": "cosine"})
     collection.add(
         ids=[c["id"] for c in chunks],
@@ -40,7 +41,7 @@ def build_index(chunk_words=CHUNK_WORDS):
         metadatas=[{"source": c["source"], "page": c["page"], "title": c["title"],
                     "chunk_index": c["chunk_index"]} for c in chunks],
     )
-    logging.info("Indexed %s chunks (%s words each) in %s", len(chunks), chunk_words, CHROMA_DIR)
+    logger.info("Indexed %s chunks (%s words each) in %s", len(chunks), chunk_words, CHROMA_DIR)
     return len(chunks)
 
 
@@ -50,7 +51,7 @@ def get_collection(chunk_words=CHUNK_WORDS):
     name = collection_name(chunk_words)
     try:
         collection = client.get_collection(name)
-    except Exception:
+    except (chromadb.errors.ChromaError, ValueError):
         collection = None
     if collection is None or collection.count() == 0:
         build_index(chunk_words)

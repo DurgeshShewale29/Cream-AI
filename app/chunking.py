@@ -12,6 +12,7 @@ END_MARKERS = ("Sitemap", "Visitor Counter", "Terms And Conditions", "Last Updat
 BLOCK_TAGS = {"p", "li", "h1", "h2", "h3", "h4", "h5", "pre", "div", "section", "article", "br"}
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 
 def overlap_for(size):
@@ -120,7 +121,7 @@ def split_blocks(blocks, size=CHUNK_WORDS, overlap=OVERLAP_WORDS):
 
 
 def make_chunk(source, title, index, text):
-    key = f"{source}|{index}|{text}".encode("utf-8")
+    key = f"{source}|{index}|{text}".encode()
     return {
         "id": hashlib.sha1(key).hexdigest()[:16],
         "text": text,
@@ -136,7 +137,7 @@ def dte_chunks(html, source, size=CHUNK_WORDS, overlap=OVERLAP_WORDS):
     page = BlockText()
     page.feed(html)
     heading = next((h for h in page.h3
-                    if re.search(r"scheme|scholarship|yojna|allowance", h, re.I)), None)
+                    if re.search(r"scheme|scholarship|yojna|allowance", h, re.IGNORECASE)), None)
     if not heading:
         raise ValueError("no scheme heading found")
     clean = heading.strip(" ]")
@@ -187,12 +188,12 @@ def build_chunks(raw_dir=RAW_DIR, size=CHUNK_WORDS, overlap=None):
             else:
                 found = dte_chunks(html, url, size, overlap)
         except FileNotFoundError:
-            logging.warning("%s not found - run: python -m app.fetch", filename)
+            logger.warning("%s not found - run: python -m app.fetch", filename)
             continue
         except ValueError as error:
-            logging.warning("%s skipped: %s", filename, error)
+            logger.warning("%s skipped: %s", filename, error)
             continue
-        logging.info("%s: %s chunks", filename, len(found))
+        logger.info("%s: %s chunks", filename, len(found))
         chunks.extend(found)
     return chunks
 

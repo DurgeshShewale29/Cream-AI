@@ -1,7 +1,7 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -28,7 +28,7 @@ class Scheme(BaseModel):
     scheme_name: str
     department: str
     eligible_category: str
-    income_limit: Optional[int] = None
+    income_limit: int | None = None
     benefit: str
     source_url: str
     verified: bool = False
@@ -61,7 +61,7 @@ class SemanticResult(BaseModel):
 
 class QuestionIn(BaseModel):
     question: str = Field(min_length=3, max_length=500)
-    name: Optional[str] = Field(default=None, max_length=100)
+    name: str | None = Field(default=None, max_length=100)
 
 
 class ChatIn(BaseModel):
@@ -96,9 +96,9 @@ class AskOut(BaseModel):
 
 
 class AgentIn(BaseModel):
-    question: Optional[str] = Field(default=None, min_length=3, max_length=500)
-    thread_id: Optional[str] = Field(default=None, min_length=1, max_length=100)
-    approve: Optional[bool] = None
+    question: str | None = Field(default=None, min_length=3, max_length=500)
+    thread_id: str | None = Field(default=None, min_length=1, max_length=100)
+    approve: bool | None = None
 
 
 class AgentStep(BaseModel):
@@ -110,8 +110,8 @@ class AgentStep(BaseModel):
 class AgentOut(BaseModel):
     thread_id: str
     status: Literal["answered", "awaiting_approval"]
-    answer: Optional[str] = None
-    pending_action: Optional[dict] = None
+    answer: str | None = None
+    pending_action: dict | None = None
     steps: list[AgentStep]
     tools_used: list[str]
     turns: int
@@ -120,7 +120,7 @@ class AgentOut(BaseModel):
 class QuestionSaved(BaseModel):
     id: int
     question: str
-    name: Optional[str] = None
+    name: str | None = None
     created_at: str
 
 
@@ -129,9 +129,9 @@ class FeedbackIn(BaseModel):
     answer: str = Field(min_length=1, max_length=5000)
     endpoint: Literal["/ask", "/agent"]
     rating: Literal["up", "down"]
-    comment: Optional[str] = Field(default=None, max_length=500)
+    comment: str | None = Field(default=None, max_length=500)
     citations_count: int = Field(default=0, ge=0)
-    thread_id: Optional[str] = Field(default=None, max_length=100)
+    thread_id: str | None = Field(default=None, max_length=100)
 
 
 class FeedbackSaved(FeedbackIn):
@@ -147,10 +147,10 @@ class FeedbackSummary(BaseModel):
 
 
 class StackingIn(BaseModel):
-    scheme_ids: Optional[list[int]] = None
+    scheme_ids: list[int] | None = None
     category: str = "EWS"
     gender: Literal["Female", "Male"] = "Female"
-    family_income: Optional[int] = Field(default=400_000, ge=0)
+    family_income: int | None = Field(default=400_000, ge=0)
     annual_fee: int = Field(default=100_000, ge=0, le=5_000_000)
     has_disability: bool = False
     is_hosteller: bool = True
@@ -174,7 +174,7 @@ def save_question(question, name=None):
         "id": len(questions) + 1,
         "question": question.strip(),
         "name": name.strip() if name else None,
-        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
     }
     questions.append(entry)
     with open(QUESTIONS_JSON, "w", encoding="utf-8") as f:
@@ -203,7 +203,7 @@ def save_feedback(body: FeedbackIn):
         "comment": body.comment.strip() if body.comment else None,
         "citations_count": body.citations_count,
         "thread_id": body.thread_id,
-        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
     }
     items.append(entry)
     FEEDBACK_JSON.parent.mkdir(parents=True, exist_ok=True)
@@ -276,7 +276,9 @@ def semantic_search_records(
     limit: int = Query(5, ge=1, le=20, description="How many chunks to return"),
 ):
     try:
-        from app.vectorstore import search as vector_search  # loaded only when this endpoint is used
+        from app.vectorstore import (
+            search as vector_search,  # loaded only when this endpoint is used
+        )
         hits = vector_search(q, top_k=limit)
     except ImportError:
         raise HTTPException(status_code=503,
@@ -359,7 +361,9 @@ def chat(body: ChatIn):
 def ask(body: AskIn):
     """Answer from the retrieved chunks, with citations. Says "I don't know" if the sources lack the answer."""
     try:
-        from app.rag import answer_question as rag_answer  # loaded only when this endpoint is used
+        from app.rag import (
+            answer_question as rag_answer,  # loaded only when this endpoint is used
+        )
         result = rag_answer(body.question)
     except ImportError:
         raise HTTPException(status_code=503,
@@ -387,7 +391,12 @@ def agent(body: AgentIn):
         raise HTTPException(status_code=422,
                             detail="Send a question, or approve (true or false) with a thread_id.")
     try:
-        from app.graph import AgentConflict, AgentNotFound, resume_turn, start_turn  # loaded only here
+        from app.graph import (  # loaded only here
+            AgentConflict,
+            AgentNotFound,
+            resume_turn,
+            start_turn,
+        )
     except ImportError:
         raise HTTPException(status_code=503,
                             detail="/agent needs more packages. Run: pip install -r requirements.txt")
