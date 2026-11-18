@@ -12,10 +12,12 @@ ScholarSetu/
 ├── analysis/
 │   └── explore.py           # prints 3 facts about the records (pandas)
 ├── app/
+│   ├── agent_loop.py        # hand-written agent: reason, act, observe
 │   ├── chunking.py          # cuts the downloaded pages into chunks (source, page, title)
 │   ├── cli.py               # menu program that uses records.py
 │   ├── embed.py             # embeddings + semantic search over the chunks
 │   ├── fetch.py             # downloads source pages into data/raw/
+│   ├── graph.py             # the agent rebuilt in LangGraph (memory + approval)
 │   ├── ingest.py            # cleans downloaded pages into data/records.json
 │   ├── llm.py               # asks Groq or Gemini (keys come from .env)
 │   ├── main.py              # FastAPI service
@@ -23,6 +25,7 @@ ScholarSetu/
 │   ├── rag.py               # answers from retrieved chunks, with citations
 │   ├── records.py           # load_records, search, count_by, get_by_id
 │   ├── smart_search.py      # TF-IDF + cosine ranking, powers /search
+│   ├── tools.py             # compare_schemes tool
 │   └── vectorstore.py       # persistent Chroma index, powers /search/semantic
 ├── data/
 │   ├── chroma/              # Chroma index (not pushed to GitHub)
@@ -106,15 +109,13 @@ Each scheme is a dict with: `scheme_name`, `department`, `eligible_category`, `i
 - `eval/eval_set.json` - 15 evaluation questions with expected sources and answers (12 the sources can answer, 3 they cannot, including the hostel-fee question)
 - `eval/run_eval.py` - runs the 15 questions with two configurations (chunk size / top-k) and prints the table below; the details are saved in `eval/eval_results.md`
 
-## RAG evaluation
-15 questions from `eval/eval_set.json` (12 that the sources can answer, 3 that they cannot). Two configurations were run on the same questions with `python eval/run_eval.py`.
+<!-- PASTE YOUR "## RAG evaluation" TABLE HERE (copy it from your current README or from the top of eval/eval_results.md), then delete this comment. -->
 
-| Config | Chunk size | Top-k | Retrieval hit-rate | Answers correct | "I don't know" correct | Overall | Avg time per question |
-|---|---|---|---|---|---|---|---|
-| A | 120 words | 3 | 11/12 | 11/12 | 3/3 | 14/15 | 2.3 s |
-| B | 60 words | 5 | 12/12 | 11/12 | 3/3 | 14/15 | 2.2 s |
-
-**Winner: config B** (chunk size 60 words, top-k 5) with 14/15 correct answers.
+## Day 9
+- `app/tools.py` - the `compare_schemes` tool: takes 2 to 4 scheme names, looks them up in `data/records.json` and returns a side-by-side Markdown table (benefit, eligibility, documents, apply link). Try it: `python -m app.tools "Rajarshi" "Pragati"`. `records.json` has no documents field yet, so that row says "Not listed in our data"
+- `app/agent_loop.py` - a hand-written agent (reason, act, observe). The model chooses one action as JSON: search the sources with RAG, compare schemes, or give the final answer. The code runs the tools; it stops after 5 steps. Try it: `python -m app.agent_loop "Compare Rajarshi and Pragati"`
+- `app/graph.py` - the same agent rebuilt in LangGraph, with memory (a conversation is saved per `thread_id`, last 5 turns, kept while the server runs) and one approval step: before the agent runs `compare_schemes` the graph pauses until a person approves or rejects it
+- `app/main.py` - new `POST /agent`: send a question (add a `thread_id` to continue a conversation). If the reply status is `awaiting_approval`, send the same `thread_id` with `approve` true or false
 
 ## How to run
 Run all commands from the project root folder.
@@ -140,14 +141,22 @@ Run all commands from the project root folder.
 
     python eval/run_eval.py
 
-### Set up the API key (needed for /chat and /ask)
+    python -m app.tools "Rajarshi" "Pragati"
+    python -m app.agent_loop "Compare Rajarshi and Pragati"
+
+### Set up the API key (needed for /chat, /ask and /agent)
 1. Get a free key from https://console.groq.com/keys (or https://aistudio.google.com/apikey for Gemini).
 2. Copy `.env.example` to `.env` and put your key in it. `.env` is private and is not committed.
 
 ### Run the API
     uvicorn app.main:app --reload
 
-Then open http://127.0.0.1:8000/docs to try every endpoint, including `POST /chat`, `GET /search/semantic` and `POST /ask`.
+Then open http://127.0.0.1:8000/docs to try every endpoint, including `POST /chat`, `GET /search/semantic`, `POST /ask` and `POST /agent`.
+
+### Try the agent with approval
+1. `POST /agent` with `{"question": "Compare Rajarshi and Pragati"}`. The reply has `status: awaiting_approval`, the `pending_action` and a `thread_id`.
+2. `POST /agent` with `{"thread_id": "<the thread_id>", "approve": true}`. The tool runs and the reply holds the answer. With `approve: false` the tool is not run.
+3. Send another question with the same `thread_id` to continue the conversation.
 
 ### Compare the two prompts
     python eval/run_prompt_compare.py
@@ -159,3 +168,4 @@ Then open http://127.0.0.1:8000/docs to try every endpoint, including `POST /cha
 - `/chat` does not use `records.json` yet; the answers come from the model and the system prompt only. `/ask` answers only from the retrieved chunks.
 - The first run of `python -m app.embed` downloads the embedding model (about 90 MB), so it needs internet.
 - `data/chroma/` is not pushed to GitHub. Run `python -m app.vectorstore` to rebuild it after downloading new pages.
+- The agent's memory (`/agent`) is kept in the server's memory, so it is lost when the server restarts.

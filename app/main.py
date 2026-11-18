@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -91,6 +91,28 @@ class AskOut(BaseModel):
     answerable: bool
     confidence: Literal["high", "medium", "low"]
     citations: list[Citation]
+
+
+class AgentIn(BaseModel):
+    question: Optional[str] = Field(default=None, min_length=3, max_length=500)
+    thread_id: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    approve: Optional[bool] = None
+
+
+class AgentStep(BaseModel):
+    action: str
+    input: Any
+    observation: str
+
+
+class AgentOut(BaseModel):
+    thread_id: str
+    status: Literal["answered", "awaiting_approval"]
+    answer: Optional[str] = None
+    pending_action: Optional[dict] = None
+    steps: list[AgentStep]
+    tools_used: list[str]
+    turns: int
 
 
 class QuestionSaved(BaseModel):
@@ -237,3 +259,31 @@ def ask(body: AskIn):
         "confidence": result["confidence"],
         "citations": result["citations"],
     }
+
+
+@app.post("/agent", response_model=AgentOut)
+def agent(body: AgentIn):
+    """The LangGraph agent, with memory. Send a question (and a thread_id to continue a conversation).
+    If the status is awaiting_approval, send the same thread_id with approve true or false."""
+    if body.approve is not None and not body.thread_id:
+        raise HTTPException(status_code=422, detail="Send the thread_id of the conversation that is waiting.")
+    if body.approve is None and not body.question:
+        raise HTTPException(status_code=422,
+                            detail="Send a question, or approve (true or false) with a thread_id.")
+    try:
+        from app.graph import AgentConflict, AgentNotFound, resume_turn, start_turn  # loaded only here
+    except ImportError:
+        raise HTTPException(status_code=503,
+                            detail="/agent needs more packages. Run: pip install -r requirements.txt")
+    try:
+        if body.approve is not None:
+            return resume_turn(body.thread_id, body.approve)
+        return start_turn(body.question, body.thread_id)
+    except AgentNotFound as error:
+        raise HTTPException(status_code=404, detail=str(error))
+    except AgentConflict as error:
+        raise HTTPException(status_code=409, detail=str(error))
+    except LLMError as error:
+        raise HTTPException(status_code=503, detail=str(error))
+    except RuntimeError as error:  # includes EmbeddingError and a missing index
+        raise HTTPException(status_code=503, detail=str(error))
