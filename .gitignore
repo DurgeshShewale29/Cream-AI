@@ -6,4 +6,5 @@ __pycache__/
 data/raw/
 .vscode/
 data/questions.json
+data/feedback.json
 data/chroma/

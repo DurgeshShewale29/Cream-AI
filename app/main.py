@@ -9,9 +9,11 @@ from pydantic import BaseModel, Field
 from app.llm import LLMError, ask_llm
 from app.records import get_by_id, load_records
 from app.smart_search import smart_search
+from app.stacking import analyze_stacking, filter_eligible_records
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 QUESTIONS_JSON = BASE_DIR / "data" / "questions.json"
+FEEDBACK_JSON = BASE_DIR / "data" / "feedback.json"
 PROMPTS_DIR = BASE_DIR / "prompts"
 
 app = FastAPI(
@@ -122,6 +124,40 @@ class QuestionSaved(BaseModel):
     created_at: str
 
 
+class FeedbackIn(BaseModel):
+    question: str = Field(min_length=1, max_length=500)
+    answer: str = Field(min_length=1, max_length=5000)
+    endpoint: Literal["/ask", "/agent"]
+    rating: Literal["up", "down"]
+    comment: Optional[str] = Field(default=None, max_length=500)
+    citations_count: int = Field(default=0, ge=0)
+    thread_id: Optional[str] = Field(default=None, max_length=100)
+
+
+class FeedbackSaved(FeedbackIn):
+    id: int
+    created_at: str
+
+
+class FeedbackSummary(BaseModel):
+    total: int
+    up: int
+    down: int
+    items: list[FeedbackSaved]
+
+
+class StackingIn(BaseModel):
+    scheme_ids: Optional[list[int]] = None
+    category: str = "EWS"
+    gender: Literal["Female", "Male"] = "Female"
+    family_income: Optional[int] = Field(default=400_000, ge=0)
+    annual_fee: int = Field(default=100_000, ge=0, le=5_000_000)
+    has_disability: bool = False
+    is_hosteller: bool = True
+    city_tier: Literal["metro", "non_metro"] = "metro"
+    include_abroad: bool = False
+
+
 def read_questions():
     """Return the saved questions (empty list if the file is missing or broken)."""
     try:
@@ -143,6 +179,36 @@ def save_question(question, name=None):
     questions.append(entry)
     with open(QUESTIONS_JSON, "w", encoding="utf-8") as f:
         json.dump(questions, f, indent=2, ensure_ascii=False)
+    return entry
+
+
+def read_feedback():
+    """Return saved thumbs up/down entries (empty list if the file is missing or broken)."""
+    try:
+        with open(FEEDBACK_JSON, encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+def save_feedback(body: FeedbackIn):
+    """Append one thumbs up/down entry to data/feedback.json and return it."""
+    items = read_feedback()
+    entry = {
+        "id": len(items) + 1,
+        "question": body.question.strip(),
+        "answer": body.answer.strip(),
+        "endpoint": body.endpoint,
+        "rating": body.rating,
+        "comment": body.comment.strip() if body.comment else None,
+        "citations_count": body.citations_count,
+        "thread_id": body.thread_id,
+        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    items.append(entry)
+    FEEDBACK_JSON.parent.mkdir(parents=True, exist_ok=True)
+    with open(FEEDBACK_JSON, "w", encoding="utf-8") as f:
+        json.dump(items, f, indent=2, ensure_ascii=False)
     return entry
 
 
@@ -226,6 +292,56 @@ def post_question(body: QuestionIn):
         return save_question(body.question, body.name)
     except OSError:
         raise HTTPException(status_code=500, detail="Could not save the question")
+
+
+@app.post("/feedback", response_model=FeedbackSaved, status_code=201)
+def post_feedback(body: FeedbackIn):
+    """Save thumbs up/down feedback from the UI to data/feedback.json."""
+    try:
+        return save_feedback(body)
+    except OSError:
+        raise HTTPException(status_code=500, detail="Could not save feedback")
+
+
+@app.get("/feedback", response_model=FeedbackSummary)
+def list_feedback(limit: int = Query(20, ge=1, le=100)):
+    """Return feedback counts and the most recent saved feedback items."""
+    items = read_feedback()
+    up = sum(1 for item in items if item.get("rating") == "up")
+    down = sum(1 for item in items if item.get("rating") == "down")
+    return {"total": len(items), "up": up, "down": down, "items": list(reversed(items))[:limit]}
+
+
+@app.post("/stacking")
+def check_stacking(body: StackingIn):
+    """Check scholarship stacking conflicts and return the highest-value preference order."""
+    records = load_records()
+    if body.scheme_ids is not None:
+        by_id = {r["id"]: r for r in records}
+        missing = [sid for sid in body.scheme_ids if sid not in by_id]
+        if missing:
+            raise HTTPException(status_code=404, detail=f"Scheme id(s) not found: {missing}")
+        selected = [by_id[sid] for sid in dict.fromkeys(body.scheme_ids)]
+    else:
+        selected = filter_eligible_records(
+            records,
+            category=body.category,
+            gender=body.gender,
+            family_income=body.family_income,
+            has_disability=body.has_disability,
+            is_hosteller=body.is_hosteller,
+            include_abroad=body.include_abroad,
+        )
+    try:
+        return analyze_stacking(
+            selected,
+            annual_fee=body.annual_fee,
+            gender=body.gender,
+            is_hosteller=body.is_hosteller,
+            city_tier=body.city_tier,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error))
 
 
 @app.post("/chat", response_model=ChatOut)
