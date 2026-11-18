@@ -1,5 +1,7 @@
 # ScholarSetu
 
+[![CI](https://github.com/DurgeshShewale29/Cream-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/DurgeshShewale29/Cream-AI/actions/workflows/ci.yml)
+
 ## Project card
 - **Product:** ScholarSetu, a chatbot that matches Maharashtra engineering students to the MahaDBT and NSP/AICTE scholarships they qualify for, with amounts, income limits and deadlines
 - **User:** Maharashtra engineering students from reserved and economically weaker categories
@@ -9,6 +11,9 @@
 ## Project structure
 ```
 ScholarSetu/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                   # GitHub Actions CI: ruff, pytest, docker build + /health smoke test
 ├── analysis/
 │   └── explore.py                   # prints 3 facts about the records (pandas)
 ├── app/
@@ -50,6 +55,7 @@ ScholarSetu/
 │   ├── task_v1.txt                  # task prompt, version 1
 │   └── task_v2.txt                  # task prompt, version 2
 ├── tests/
+│   ├── conftest.py                  # ensures project root is on sys.path for bare pytest
 │   ├── test_agent_tool.py           # pytest tests for compare_schemes, agent_loop & approval rejection
 │   ├── test_api_and_rag.py          # pytest tests for /health & /ask with a fake LLM
 │   ├── test_day10.py                # stacking, feedback, RAG Q6 refusal, approval & Streamlit AppTest
@@ -155,6 +161,11 @@ Each scheme is a dict with: `scheme_name`, `department`, `eligible_category`, `i
 - `tests/` - full `pytest` suite covering records & TF-IDF search (`tests/test_records_and_search.py`), `/health` and `/ask` with a fake LLM including citation enforcement and Q6 refusal (`tests/test_api_and_rag.py`), `compare_schemes`, `agent_loop` and LangGraph approval/rejection (`tests/test_agent_tool.py`), plus stacking rules, feedback and Streamlit `AppTest` (`tests/test_day10.py`).
 - `ruff check .` - passes across the full repository with zero errors.
 - `Dockerfile`, `.dockerignore` and `docker-compose.yml` - containerizes both the FastAPI API (`api`) and Streamlit UI (`ui`) with a non-root user, persistent `./data` volume, API healthcheck and automatic service wiring (`SCHOLARSETU_API_URL=http://api:8000`).
+
+## Day 12
+- `.github/workflows/ci.yml` - GitHub Actions CI running `ruff check .`, `pytest -v` (41 tests), and `docker build` + container `/health` smoke test on every push and pull request to `main`.
+- `Dockerfile` - installs CPU-only PyTorch (smaller, faster image) and listens on `${PORT:-8000}` for cloud deployment (Render / Hugging Face Spaces).
+- CI status badge added at the top of this README; merged via pull request from feature branch `feat/day-12-ci-and-deploy` after all CI checks passed.
 
 ## How to run
 Run all commands from the project root folder.
