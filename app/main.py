@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 
 from app.llm import LLMError, ask_llm
@@ -240,6 +241,12 @@ def answer_question(question, version="v2"):
     task_prompt = load_prompt(f"task_{version}.txt").replace("{question}", question.strip())
     raw = ask_llm(system_prompt, task_prompt, json_mode=True)
     return parse_chat_reply(raw)
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    """Redirect root to interactive API documentation."""
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/health")
