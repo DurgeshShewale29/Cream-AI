@@ -7,7 +7,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --upgrade pip \
+    && pip install --index-url https://download.pytorch.org/whl/cpu torch \
+    && pip install -r requirements.txt
 
 COPY app ./app
 COPY ui ./ui
@@ -20,4 +22,4 @@ USER appuser
 
 EXPOSE 8000 8501
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

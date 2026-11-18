@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    name: Ruff & Pytest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --index-url https://download.pytorch.org/whl/cpu torch
+          pip install -r requirements.txt
+
+      - name: Lint with ruff
+        run: ruff check .
+
+      - name: Run tests with pytest
+        run: pytest -v
+
+  docker-build:
+    name: Docker build & /health smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t scholarsetu:ci .
+
+      - name: Smoke test /health inside container
+        run: |
+          docker run -d --name scholarsetu-smoke -p 8000:8000 scholarsetu:ci
+          trap 'docker logs scholarsetu-smoke; docker rm -f scholarsetu-smoke' EXIT
+          for i in $(seq 1 20); do
+            if curl -sf http://127.0.0.1:8000/health | grep -q '"ok"'; then
+              echo "Container /health OK"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Container /health check timed out"
+          exit 1
