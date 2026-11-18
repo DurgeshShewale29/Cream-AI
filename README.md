@@ -2,6 +2,10 @@
 
 [![CI](https://github.com/DurgeshShewale29/Cream-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/DurgeshShewale29/Cream-AI/actions/workflows/ci.yml)
 
+- **Live API:** https://cream-ai.onrender.com
+- **Live Health Check:** https://cream-ai.onrender.com/health
+- **Live API Docs:** https://cream-ai.onrender.com/docs
+
 ## Project card
 - **Product:** ScholarSetu, a chatbot that matches Maharashtra engineering students to the MahaDBT and NSP/AICTE scholarships they qualify for, with amounts, income limits and deadlines
 - **User:** Maharashtra engineering students from reserved and economically weaker categories
@@ -166,6 +170,10 @@ Each scheme is a dict with: `scheme_name`, `department`, `eligible_category`, `i
 - `.github/workflows/ci.yml` - GitHub Actions CI running `ruff check .`, `pytest -v` (41 tests), and `docker build` + container `/health` smoke test on every push and pull request to `main`.
 - `Dockerfile` - installs CPU-only PyTorch (smaller, faster image) and listens on `${PORT:-8000}` for cloud deployment (Render / Hugging Face Spaces).
 - CI status badge added at the top of this README; merged via pull request from feature branch `feat/day-12-ci-and-deploy` after all CI checks passed.
+- Deployed live on Render:
+  - Base URL: https://cream-ai.onrender.com
+  - Public health check: https://cream-ai.onrender.com/health (`{"status":"ok","records":7}`)
+  - Interactive Swagger docs: https://cream-ai.onrender.com/docs
 
 ## How to run
 Run all commands from the project root folder.
