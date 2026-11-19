@@ -17,6 +17,35 @@ GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:ge
 DEFAULT_MODELS = {"groq": "llama-3.3-70b-versatile", "gemini": "gemini-2.5-flash"}
 KEY_NAMES = {"groq": "GROQ_API_KEY", "gemini": "GEMINI_API_KEY"}
 
+_last_usage: dict[str, int | float] = {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0,
+    "latency_ms": 0.0,
+}
+
+
+def record_usage(
+    prompt_tokens: int = 0,
+    completion_tokens: int = 0,
+    total_tokens: int = 0,
+    latency_ms: float = 0.0,
+) -> None:
+    """Store token usage and latency metrics from the most recent LLM call."""
+    global _last_usage
+    tot = total_tokens if total_tokens else (prompt_tokens + completion_tokens)
+    _last_usage = {
+        "prompt_tokens": int(prompt_tokens),
+        "completion_tokens": int(completion_tokens),
+        "total_tokens": int(tot),
+        "latency_ms": float(latency_ms),
+    }
+
+
+def get_last_usage() -> dict[str, int | float]:
+    """Return a copy of the token usage metrics from the most recent LLM call."""
+    return dict(_last_usage)
+
 
 class LLMError(Exception):
     """Anything that goes wrong when asking the model, with a message the user can act on."""
@@ -95,7 +124,28 @@ def groq_request(system_prompt, user_message, temperature, max_tokens, json_mode
     if json_mode:
         payload["response_format"] = {"type": "json_object"}
     headers = {"Authorization": f"Bearer {get_key('groq')}", "Content-Type": "application/json"}
+    start_t = time.perf_counter()
     data = post_json(GROQ_URL, headers, payload)
+    latency_ms = (time.perf_counter() - start_t) * 1000
+
+    usage = data.get("usage") or {}
+    p_tokens = usage.get("prompt_tokens", 0)
+    c_tokens = usage.get("completion_tokens", 0)
+    t_tokens = usage.get("total_tokens", 0)
+    record_usage(
+        prompt_tokens=p_tokens,
+        completion_tokens=c_tokens,
+        total_tokens=t_tokens,
+        latency_ms=latency_ms,
+    )
+    logger.info(
+        "Groq call finished in %.1f ms | tokens: prompt=%d completion=%d total=%d",
+        latency_ms,
+        p_tokens,
+        c_tokens,
+        t_tokens,
+    )
+
     try:
         return data["choices"][0]["message"]["content"]
     except (KeyError, IndexError, TypeError):
@@ -125,7 +175,28 @@ def ask_gemini(system_prompt, user_message, temperature, max_tokens, json_mode):
         "generationConfig": config,
     }
     headers = {"x-goog-api-key": get_key("gemini"), "Content-Type": "application/json"}
+    start_t = time.perf_counter()
     data = post_json(GEMINI_URL.format(model=get_model("gemini")), headers, payload)
+    latency_ms = (time.perf_counter() - start_t) * 1000
+
+    meta = data.get("usageMetadata") or {}
+    p_tokens = meta.get("promptTokenCount", 0)
+    c_tokens = meta.get("candidatesTokenCount", 0)
+    t_tokens = meta.get("totalTokenCount", 0)
+    record_usage(
+        prompt_tokens=p_tokens,
+        completion_tokens=c_tokens,
+        total_tokens=t_tokens,
+        latency_ms=latency_ms,
+    )
+    logger.info(
+        "Gemini call finished in %.1f ms | tokens: prompt=%d completion=%d total=%d",
+        latency_ms,
+        p_tokens,
+        c_tokens,
+        t_tokens,
+    )
+
     try:
         return data["candidates"][0]["content"]["parts"][0]["text"]
     except (KeyError, IndexError, TypeError):
@@ -136,4 +207,16 @@ def ask_llm(system_prompt, user_message, temperature=0.2, max_tokens=800, json_m
     """Send a system prompt and a user message to the chosen provider; return the text reply."""
     provider = get_provider()
     ask = ask_groq if provider == "groq" else ask_gemini
-    return ask(system_prompt, user_message, temperature, max_tokens, json_mode)
+    start_t = time.perf_counter()
+    reply = ask(system_prompt, user_message, temperature, max_tokens, json_mode)
+    duration_ms = (time.perf_counter() - start_t) * 1000
+    usage = get_last_usage()
+    logger.info(
+        "ask_llm completed | provider=%s | latency_ms=%.1f | prompt_tokens=%d | completion_tokens=%d | total_tokens=%d",
+        provider,
+        duration_ms,
+        usage.get("prompt_tokens", 0),
+        usage.get("completion_tokens", 0),
+        usage.get("total_tokens", 0),
+    )
+    return reply

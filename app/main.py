@@ -1,16 +1,22 @@
 import json
+import logging
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 
-from app.llm import LLMError, ask_llm
+from app.cache import query_cache
+from app.llm import LLMError, ask_llm, get_last_usage
 from app.records import get_by_id, load_records
+from app.security import validate_input
 from app.smart_search import smart_search
 from app.stacking import analyze_stacking, filter_eligible_records
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 QUESTIONS_JSON = BASE_DIR / "data" / "questions.json"
@@ -22,6 +28,31 @@ app = FastAPI(
     description="Scholarship schemes for Maharashtra engineering students (DTE Maharashtra + NSP).",
     version="0.1.0",
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log request latency and token metrics, and set telemetry headers."""
+    start_time = time.perf_counter()
+    response = await call_next(request)
+    duration_ms = (time.perf_counter() - start_time) * 1000
+    response.headers["X-Process-Time-Ms"] = f"{duration_ms:.2f}"
+
+    usage = get_last_usage()
+    if usage.get("total_tokens", 0) > 0:
+        response.headers["X-Total-Tokens"] = str(usage["total_tokens"])
+
+    logger.info(
+        "Request method=%s path=%s status=%d latency_ms=%.2f prompt_tokens=%d completion_tokens=%d total_tokens=%d",
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration_ms,
+        usage.get("prompt_tokens", 0),
+        usage.get("completion_tokens", 0),
+        usage.get("total_tokens", 0),
+    )
+    return response
 
 
 class Scheme(BaseModel):
@@ -159,6 +190,14 @@ class StackingIn(BaseModel):
     include_abroad: bool = False
 
 
+class CacheStatsOut(BaseModel):
+    size: int
+    max_size: int
+    hits: int
+    misses: int
+    hit_ratio: float
+
+
 def read_questions():
     """Return the saved questions (empty list if the file is missing or broken)."""
     try:
@@ -270,18 +309,24 @@ def get_record(record_id: int):
 
 @app.get("/search", response_model=SearchResult)
 def search_records(
-    q: str = Query(..., min_length=2, description="Your question or keywords, e.g. OBC girl hostel"),
+    q: str = Query(..., min_length=2, max_length=200, description="Your question or keywords, e.g. OBC girl hostel"),
     limit: int = Query(5, ge=1, le=20, description="How many ranked results to return"),
 ):
+    valid, err = validate_input(q, max_length=200)
+    if not valid:
+        raise HTTPException(status_code=422, detail=err)
     results = smart_search(q, top_k=limit)
     return {"query": q, "count": len(results), "results": results}
 
 
 @app.get("/search/semantic", response_model=SemanticResult)
 def semantic_search_records(
-    q: str = Query(..., min_length=2, description="Your question, e.g. hostel allowance for farmers' children"),
+    q: str = Query(..., min_length=2, max_length=200, description="Your question, e.g. hostel allowance for farmers' children"),
     limit: int = Query(5, ge=1, le=20, description="How many chunks to return"),
 ):
+    valid, err = validate_input(q, max_length=200)
+    if not valid:
+        raise HTTPException(status_code=422, detail=err)
     try:
         from app.vectorstore import (
             search as vector_search,  # loaded only when this endpoint is used
@@ -297,6 +342,9 @@ def semantic_search_records(
 
 @app.post("/questions", response_model=QuestionSaved, status_code=201)
 def post_question(body: QuestionIn):
+    valid, err = validate_input(body.question, max_length=500)
+    if not valid:
+        raise HTTPException(status_code=422, detail=err)
     try:
         return save_question(body.question, body.name)
     except OSError:
@@ -355,6 +403,9 @@ def check_stacking(body: StackingIn):
 
 @app.post("/chat", response_model=ChatOut)
 def chat(body: ChatIn):
+    valid, err = validate_input(body.question, max_length=500)
+    if not valid:
+        raise HTTPException(status_code=422, detail=err)
     try:
         reply, _ = answer_question(body.question, body.prompt_version)
     except LLMError as error:
@@ -367,6 +418,11 @@ def chat(body: ChatIn):
 @app.post("/ask", response_model=AskOut)
 def ask(body: AskIn):
     """Answer from the retrieved chunks, with citations. Says "I don't know" if the sources lack the answer."""
+    valid, err = validate_input(body.question, max_length=500)
+    if not valid:
+        raise HTTPException(status_code=422, detail=err)
+
+    start_t = time.perf_counter()
     try:
         from app.rag import (
             answer_question as rag_answer,  # loaded only when this endpoint is used
@@ -379,6 +435,18 @@ def ask(body: AskIn):
         raise HTTPException(status_code=503, detail=str(error))
     except RuntimeError as error:  # includes EmbeddingError and a missing index
         raise HTTPException(status_code=503, detail=str(error))
+
+    duration_ms = (time.perf_counter() - start_t) * 1000
+    usage = get_last_usage() if not result.get("cached") else {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+    logger.info(
+        "POST /ask completed in %.2f ms | cached=%s | prompt_tokens=%d completion_tokens=%d total_tokens=%d",
+        duration_ms,
+        result.get("cached", False),
+        usage.get("prompt_tokens", 0),
+        usage.get("completion_tokens", 0),
+        usage.get("total_tokens", 0),
+    )
+
     return {
         "question": body.question,
         "answer": result["answer"],
@@ -397,6 +465,10 @@ def agent(body: AgentIn):
     if body.approve is None and not body.question:
         raise HTTPException(status_code=422,
                             detail="Send a question, or approve (true or false) with a thread_id.")
+    if body.question:
+        valid, err = validate_input(body.question, max_length=500)
+        if not valid:
+            raise HTTPException(status_code=422, detail=err)
     try:
         from app.graph import (  # loaded only here
             AgentConflict,
@@ -419,3 +491,16 @@ def agent(body: AgentIn):
         raise HTTPException(status_code=503, detail=str(error))
     except RuntimeError as error:  # includes EmbeddingError and a missing index
         raise HTTPException(status_code=503, detail=str(error))
+
+
+@app.get("/cache/stats", response_model=CacheStatsOut)
+def cache_stats():
+    """Return in-memory query cache statistics."""
+    return query_cache.stats()
+
+
+@app.post("/cache/clear")
+def cache_clear():
+    """Clear the in-memory query cache."""
+    query_cache.clear()
+    return {"status": "cleared"}
