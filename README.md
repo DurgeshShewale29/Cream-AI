@@ -170,13 +170,16 @@ ScholarSetu/
 │   ├── records.json                 # clean verified scholarship records
 │   └── sample_records.py            # 20 hand-collected scholarship schemes
 ├── docs/
+│   ├── demo_rehearsal.md            # verified logs of 2 automated demo rehearsals
 │   ├── how_llms_work.md             # how LLMs work + 10 user questions
+│   ├── interview.md                 # 60s pitch, hardest engineering problem story & 10 Q&As
 │   ├── resume.md                    # 3 metrics-driven resume bullets
 │   └── ui_screenshot.png            # Streamlit UI screenshot
 ├── eval/
 │   ├── eval_results.md              # complete evaluation outputs for Config A vs Config B
 │   ├── eval_set.json                # 15 ground-truth evaluation questions
 │   ├── prompt_compare.md            # v1 vs v2 prompt comparison report
+│   ├── rehearse_demo.py             # automated 6-step demo rehearsal harness
 │   ├── run_eval.py                  # automated RAG evaluation harness
 │   ├── run_prompt_compare.py        # prompt version benchmark script
 │   └── search_results.md            # semantic retrieval hits for 10 core questions
@@ -197,6 +200,7 @@ ScholarSetu/
 ├── .env.example
 ├── Dockerfile
 ├── docker-compose.yml
+├── PROGRESS.md                      # Complete milestone tracker (Days 1–14 100% closed)
 ├── requirements.txt
 └── README.md
 ```
@@ -277,3 +281,8 @@ docker compose down
 - **Day 13:**
   - **S1:** Request latency and token usage telemetry logging, in-memory thread-safe LRU/TTL query cache (`app/cache.py`), input boundary validation, and adversarial prompt-injection test suite (`tests/test_day13.py`). Production notes with measured performance numbers.
   - **S2:** Comprehensive selling README with value proposition, clean Mermaid architecture diagram, demo video link, benchmark results tables, and 3 quantifiable resume bullets in `docs/resume.md`.
+- **Day 14:**
+  - Author comprehensive interview preparation guide (`docs/interview.md`) featuring the 60-second spoken pitch, deep-dive STAR interview story on the hardest engineering problem (multi-condition rule matrix in code vs LLM guessing), and 10 technical Q&As.
+  - Close every milestone item in `PROGRESS.md`.
+  - Rehearse the demo twice with automated end-to-end harness (`eval/rehearse_demo.py`), documenting passing runs in `docs/demo_rehearsal.md`.
+  - Tag `final` release.
