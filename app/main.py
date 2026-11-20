@@ -282,13 +282,13 @@ def answer_question(question, version="v2"):
     return parse_chat_reply(raw)
 
 
-@app.get("/", include_in_schema=False)
+@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 def root():
     """Redirect root to interactive API documentation."""
     return RedirectResponse(url="/docs")
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health():
     """Tells you the service is running and how many schemes it has loaded."""
     return {"status": "ok", "records": len(load_records())}
