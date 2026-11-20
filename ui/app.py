@@ -14,14 +14,42 @@ from typing import Any
 import pandas as pd
 import requests
 import streamlit as st
+from streamlit.errors import StreamlitSecretNotFoundError
 
 UI_DIR = Path(__file__).resolve().parent
 ROOT_DIR = UI_DIR.parent
+logger = logging.getLogger(__name__)
 
-API_URL = os.getenv("SCHOLARSETU_API_URL", "http://127.0.0.1:8000")
+DEFAULT_RENDER_API = "https://cream-ai.onrender.com"
+
+
+def resolve_api_url() -> str:
+    """Resolve API URL: custom env/secrets -> local uvicorn if running -> production Render."""
+    custom = os.getenv("SCHOLARSETU_API_URL")
+    if not custom:
+        try:
+            if hasattr(st, "secrets") and "SCHOLARSETU_API_URL" in st.secrets:
+                custom = str(st.secrets["SCHOLARSETU_API_URL"])
+        except (KeyError, AttributeError, FileNotFoundError, StreamlitSecretNotFoundError):
+            logger.debug("SCHOLARSETU_API_URL not present in st.secrets")
+    if custom:
+        return custom.rstrip("/")
+
+    # If local uvicorn server is running and healthy, use it
+    try:
+        r = requests.get("http://127.0.0.1:8000/health", timeout=0.8)
+        if r.status_code == 200:
+            return "http://127.0.0.1:8000"
+    except requests.RequestException:
+        logger.debug("Local uvicorn server unreachable; falling back to production Render API")
+
+    # Default fallback: live production Render API
+    return DEFAULT_RENDER_API
+
+
+API_URL = resolve_api_url()
 FEEDBACK_JSON = ROOT_DIR / "data" / "feedback.json"
 API_TIMEOUT = 120
-logger = logging.getLogger(__name__)
 
 
 def _load_app_modules():
@@ -89,7 +117,7 @@ def extract_agent_citations(steps: list[dict], answer: str = "") -> list[dict]:
 
 def check_api_health(api_url: str) -> tuple[bool, str]:
     try:
-        resp = requests.get(f"{api_url.rstrip('/')}/health", timeout=4)
+        resp = requests.get(f"{api_url.rstrip('/')}/health", timeout=8)
         resp.raise_for_status()
         data = resp.json()
         return True, f"Online ({data.get('records', 0)} schemes)"
@@ -405,7 +433,7 @@ def main() -> None:
     load_records, ALL_CATEGORIES, analyze_stacking, _, filter_eligible_records = _load_app_modules()
     records = load_records()
     records_by_id = {r["id"]: r for r in records}
-    api_url = API_URL
+    api_url = resolve_api_url()
 
     with st.sidebar:
         st.title("🎓 ScholarSetu")
@@ -413,7 +441,10 @@ def main() -> None:
 
         ok, _ = check_api_health(api_url)
         if not ok:
-            st.error("Backend server is offline. Start it with: `uvicorn app.main:app --reload`")
+            st.error(
+                f"Backend server is offline or waking up ({api_url}). "
+                "If on Render free tier, it spins up in ~30s. Please wait a moment and refresh."
+            )
 
         mode_label = st.radio(
             "Assistant mode",
