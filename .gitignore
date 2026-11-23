@@ -6,7 +6,7 @@ __pycache__/
 .vscode/
 data/questions.json
 data/feedback.json
-data/chroma/
+# data/chroma/
 .pytest_cache/
 .ruff_cache/
 Project.md

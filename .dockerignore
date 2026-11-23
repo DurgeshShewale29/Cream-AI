@@ -8,7 +8,7 @@ venv
 .venv
 __pycache__
 *.pyc
-data/chroma
+# data/chroma
 data/questions.json
 data/feedback.json
 tests

@@ -16,6 +16,7 @@ COPY ui ./ui
 COPY prompts ./prompts
 COPY data/records.json ./data/records.json
 COPY data/raw ./data/raw
+COPY data/chroma ./data/chroma
 COPY docs ./docs
 
 RUN useradd --create-home appuser && chown -R appuser:appuser /app
