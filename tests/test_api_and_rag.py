@@ -30,10 +30,14 @@ FAKE_CHUNKS = [
 ]
 
 
-def test_root_redirects_to_docs():
-    resp = client.get("/", follow_redirects=False)
-    assert resp.status_code in (302, 307)
-    assert resp.headers["location"] == "/docs"
+def test_root_returns_json_status():
+    resp = client.get("/")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "online"
+    assert data["name"] == "ScholarSetu API"
+    assert "ui_url" in data
+    assert "docs_url" in data
 
 
 def test_health_endpoint_ok():

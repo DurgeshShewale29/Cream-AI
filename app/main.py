@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 
 from app.cache import query_cache
@@ -284,8 +283,15 @@ def answer_question(question, version="v2"):
 
 @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 def root():
-    """Redirect root to interactive API documentation."""
-    return RedirectResponse(url="/docs")
+    """Return API status and links to UI and documentation."""
+    return {
+        "name": "ScholarSetu API",
+        "status": "online",
+        "description": "Scholarship schemes for Maharashtra engineering students (DTE Maharashtra + NSP)",
+        "ui_url": "https://scholarsetu.streamlit.app",
+        "docs_url": "/docs",
+        "records": len(load_records()),
+    }
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])
