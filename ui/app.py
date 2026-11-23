@@ -115,9 +115,10 @@ def extract_agent_citations(steps: list[dict], answer: str = "") -> list[dict]:
     return citations
 
 
+@st.cache_data(ttl=30, show_spinner=False)
 def check_api_health(api_url: str) -> tuple[bool, str]:
     try:
-        resp = requests.get(f"{api_url.rstrip('/')}/health", timeout=8)
+        resp = requests.get(f"{api_url.rstrip('/')}/health", timeout=3.5)
         resp.raise_for_status()
         data = resp.json()
         return True, f"Online ({data.get('records', 0)} schemes)"
