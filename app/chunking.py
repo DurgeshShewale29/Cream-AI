@@ -174,6 +174,32 @@ def nsp_chunks(lines, source):
     return chunks
 
 
+def chunks_from_records():
+    """Fallback: build grounded chunks directly from data/records.json if raw HTML is missing."""
+    import json
+    from pathlib import Path
+    records_file = Path(__file__).resolve().parent.parent / "data" / "records.json"
+    if not records_file.exists():
+        return []
+    try:
+        records = json.loads(records_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+
+    chunks = []
+    for r in records:
+        title = r.get("scheme_name", "Scholarship Scheme")
+        source = r.get("source_url", "https://dte.maharashtra.gov.in")
+        dept = r.get("department", "")
+        cat = r.get("eligible_category", "")
+        inc = r.get("income_limit")
+        inc_str = f"Annual family income limit: Rs {inc:,}." if inc else "No income limit stated."
+        benefit = r.get("benefit", "")
+        text = f"{title}. Department: {dept}. Eligible category: {cat}. {inc_str} Benefits: {benefit}."
+        chunks.append(make_chunk(source, title, len(chunks), text))
+    return chunks
+
+
 def build_chunks(raw_dir=RAW_DIR, size=CHUNK_WORDS, overlap=None):
     """Chunks of every downloaded page. Pages that are missing or unreadable are skipped."""
     overlap = overlap_for(size) if overlap is None else overlap
@@ -195,6 +221,11 @@ def build_chunks(raw_dir=RAW_DIR, size=CHUNK_WORDS, overlap=None):
             continue
         logger.info("%s: %s chunks", filename, len(found))
         chunks.extend(found)
+
+    if not chunks:
+        logger.warning("No raw HTML chunks generated; falling back to data/records.json")
+        chunks = chunks_from_records()
+
     return chunks
 
 

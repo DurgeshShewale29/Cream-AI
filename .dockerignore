@@ -9,7 +9,6 @@ venv
 __pycache__
 *.pyc
 data/chroma
-data/raw
 data/questions.json
 data/feedback.json
 tests
