@@ -358,75 +358,116 @@ def init_state() -> None:
         st.session_state.feedback_saved = {}
 
 
+def split_into_questions(text: str) -> list[str]:
+    """Split input text into individual questions if user entered multiple questions in a list/block."""
+    text = text.strip()
+    if not text:
+        return []
+
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    extracted: list[str] = []
+
+    # Check if input has numbered/bulleted items: "1. ...", "2) ...", "- ...", "* ..."
+    bullet_pattern = re.compile(r"^(?:\d+[\.\)]|\-|\*|\•)\s*(.+)$")
+    has_numbered_items = any(bullet_pattern.match(line) for line in lines)
+
+    if has_numbered_items and len(lines) > 1:
+        for line in lines:
+            m = bullet_pattern.match(line)
+            q = (m.group(1) if m else line).strip()
+            if len(q) >= 3:
+                extracted.append(q)
+    elif "\n" in text:
+        # Check if lines look like separate queries
+        for line in lines:
+            if len(line) >= 4 and (line.endswith("?") or len(lines) <= 5):
+                extracted.append(line)
+        if not extracted:
+            extracted = [text]
+    elif "?" in text:
+        # Check for multiple sentence questions ending with '?'
+        parts = [p.strip() + "?" for p in text.split("?") if p.strip()]
+        if len(parts) > 1 and all(len(p) >= 5 for p in parts):
+            extracted = parts
+        else:
+            extracted = [text]
+    else:
+        extracted = [text]
+
+    return extracted if extracted else [text]
+
+
 def handle_question(question: str, api_url: str, mode: str, records: list[dict]) -> None:
     _, _, _, detect_mentioned_records, _ = _load_app_modules()
-    question = question.strip()
-    if len(question) < 3:
-        st.warning("Please enter at least 3 characters.")
-        return
+    sub_questions = split_into_questions(question)
 
-    st.session_state.messages.append({"role": "user", "content": question})
+    for q_item in sub_questions:
+        q_item = q_item.strip()
+        if len(q_item) < 3:
+            continue
 
-    try:
-        if mode == "/ask":
-            data = call_ask(api_url, question)
-            citations = data.get("citations", [])
-            matched = detect_mentioned_records(data.get("answer", ""), citations, [], records)
-            st.session_state.last_matched_ids = [r["id"] for r in matched]
-            st.session_state.messages.append({
-                "role": "assistant",
-                "endpoint": "/ask",
-                "question": question,
-                "content": data.get("answer", ""),
-                "answerable": data.get("answerable", False),
-                "confidence": data.get("confidence", "low"),
-                "citations": citations,
-                "steps": [],
-                "status": "answered",
-                "pending_action": None,
-                "thread_id": None,
-                "matched_ids": [r["id"] for r in matched],
-            })
-        else:
-            data = call_agent(api_url, question=question, thread_id=st.session_state.thread_id)
-            st.session_state.thread_id = data.get("thread_id")
-            steps = data.get("steps", [])
-            answer = data.get("answer") or ""
-            citations = extract_agent_citations(steps, answer)
-            matched = detect_mentioned_records(answer, citations, steps, records)
-            if matched:
+        st.session_state.messages.append({"role": "user", "content": q_item})
+
+        try:
+            if mode == "/ask":
+                data = call_ask(api_url, q_item)
+                citations = data.get("citations", [])
+                matched = detect_mentioned_records(data.get("answer", ""), citations, [], records)
                 st.session_state.last_matched_ids = [r["id"] for r in matched]
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "endpoint": "/ask",
+                    "question": q_item,
+                    "content": data.get("answer", ""),
+                    "answerable": data.get("answerable", False),
+                    "confidence": data.get("confidence", "low"),
+                    "citations": citations,
+                    "steps": [],
+                    "status": "answered",
+                    "pending_action": None,
+                    "thread_id": None,
+                    "matched_ids": [r["id"] for r in matched],
+                })
+            else:
+                data = call_agent(api_url, question=q_item, thread_id=st.session_state.thread_id)
+                st.session_state.thread_id = data.get("thread_id")
+                steps = data.get("steps", [])
+                answer = data.get("answer") or ""
+                citations = extract_agent_citations(steps, answer)
+                matched = detect_mentioned_records(answer, citations, steps, records)
+                if matched:
+                    st.session_state.last_matched_ids = [r["id"] for r in matched]
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "endpoint": "/agent",
+                    "question": q_item,
+                    "content": answer,
+                    "answerable": True,
+                    "confidence": None,
+                    "citations": citations,
+                    "steps": steps,
+                    "tools_used": data.get("tools_used", []),
+                    "turns": data.get("turns", 0),
+                    "status": data.get("status", "answered"),
+                    "pending_action": data.get("pending_action"),
+                    "thread_id": data.get("thread_id"),
+                    "matched_ids": [r["id"] for r in matched],
+                })
+        except (requests.RequestException, RuntimeError, ValueError) as error:
             st.session_state.messages.append({
                 "role": "assistant",
-                "endpoint": "/agent",
-                "question": question,
-                "content": answer,
-                "answerable": True,
-                "confidence": None,
-                "citations": citations,
-                "steps": steps,
-                "tools_used": data.get("tools_used", []),
-                "turns": data.get("turns", 0),
-                "status": data.get("status", "answered"),
-                "pending_action": data.get("pending_action"),
-                "thread_id": data.get("thread_id"),
-                "matched_ids": [r["id"] for r in matched],
+                "endpoint": mode,
+                "question": q_item,
+                "content": f"Request error: {error}",
+                "answerable": False,
+                "confidence": "low",
+                "citations": [],
+                "steps": [],
+                "status": "error",
+                "pending_action": None,
+                "thread_id": st.session_state.thread_id,
+                "matched_ids": [],
             })
-    except (requests.RequestException, RuntimeError, ValueError) as error:
-        st.session_state.messages.append({
-            "role": "assistant",
-            "endpoint": mode,
-            "question": question,
-            "content": f"Request error: {error}",
-            "answerable": False,
-            "confidence": "low",
-            "citations": [],
-            "steps": [],
-            "status": "error",
-            "pending_action": None,
-            "thread_id": st.session_state.thread_id,
-            "matched_ids": [],
-        })
 
 
 def handle_approval(msg_index: int, approve: bool, api_url: str, records: list[dict]) -> None:
