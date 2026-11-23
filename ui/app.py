@@ -314,6 +314,37 @@ def render_agent_steps(steps: list[dict]) -> None:
             st.caption(str(step.get("observation", ""))[:300])
 
 
+def render_skeleton_loader() -> None:
+    """Render an animated skeleton placeholder while querying the model or backend."""
+    skeleton_html = """
+    <style>
+    @keyframes pulse {
+        0% { opacity: 0.35; }
+        50% { opacity: 0.85; }
+        100% { opacity: 0.35; }
+    }
+    .skeleton-box {
+        animation: pulse 1.4s ease-in-out infinite;
+        background: linear-gradient(90deg, #2b303c 25%, #3a4150 50%, #2b303c 75%);
+        background-size: 200% 100%;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    .skel-line-long { height: 16px; width: 92%; }
+    .skel-line-med { height: 16px; width: 75%; }
+    .skel-line-short { height: 16px; width: 45%; }
+    .skel-badge { height: 28px; width: 140px; border-radius: 14px; margin-bottom: 12px; }
+    </style>
+    <div style="padding: 10px 0;">
+        <div class="skeleton-box skel-badge"></div>
+        <div class="skeleton-box skel-line-long"></div>
+        <div class="skeleton-box skel-line-med"></div>
+        <div class="skeleton-box skel-line-short"></div>
+    </div>
+    """
+    st.markdown(skeleton_html, unsafe_allow_html=True)
+
+
 def init_state() -> None:
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -511,6 +542,8 @@ def main() -> None:
         if st.session_state.pending_question:
             queued = st.session_state.pending_question
             st.session_state.pending_question = None
+            with st.chat_message("assistant"):
+                render_skeleton_loader()
             with st.spinner("Searching official scholarship sources..."):
                 handle_question(queued, api_url, mode, records)
             st.rerun()
@@ -604,6 +637,8 @@ def main() -> None:
 
         prompt = st.chat_input("Ask ScholarSetu about Maharashtra engineering scholarships...")
         if prompt:
+            with st.chat_message("assistant"):
+                render_skeleton_loader()
             with st.spinner("Searching official scholarship sources..."):
                 handle_question(prompt, api_url, mode, records)
             st.rerun()
