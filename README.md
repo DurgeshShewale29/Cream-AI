@@ -1,4 +1,3 @@
-[![CI](https://github.com/DurgeshShewale29/Cream-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/DurgeshShewale29/Cream-AI/actions/workflows/ci.yml)
 # ScholarSetu: AI-Powered Maharashtra Scholarship Discovery & Stacking Optimizer
 
 [![CI](https://github.com/DurgeshShewale29/Cream-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/DurgeshShewale29/Cream-AI/actions/workflows/ci.yml)
