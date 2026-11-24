@@ -386,9 +386,14 @@ def split_into_questions(text: str) -> list[str]:
             extracted = [text]
     elif "?" in text:
         # Check for multiple sentence questions ending with '?'
-        parts = [p.strip() + "?" for p in text.split("?") if p.strip()]
-        if len(parts) > 1 and all(len(p) >= 5 for p in parts):
-            extracted = parts
+        raw_parts = [p.strip() for p in text.split("?") if p.strip()]
+        if len(raw_parts) > 1 and all(len(p) >= 5 for p in raw_parts):
+            ends_with_q = text.endswith("?")
+            for i, p in enumerate(raw_parts):
+                if i < len(raw_parts) - 1 or ends_with_q:
+                    extracted.append(p + "?")
+                else:
+                    extracted.append(p)
         else:
             extracted = [text]
     else:
