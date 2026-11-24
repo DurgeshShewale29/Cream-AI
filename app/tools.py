@@ -29,7 +29,7 @@ def words_match(query, name):
     if not wanted:
         return False
     name_words = words(name)
-    return all(w in name_words or difflib.get_close_matches(w, name_words, n=1, cutoff=0.8)
+    return all(w in name_words or difflib.get_close_matches(w, name_words, n=1, cutoff=0.65)
                for w in wanted)
 
 
